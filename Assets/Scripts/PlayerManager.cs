@@ -40,6 +40,7 @@ public class PlayerManager : MonoBehaviour
             UnitController firstSelectedUnit = selectedUnits[0];
             var unitInfoData = new Dictionary<object, object>();
             unitInfoData.Add(firstSelectedUnit.stats.unitName, null);
+            unitInfoData.Add("Player", firstSelectedUnit.playerID);
             unitInfoData.Add("HP", firstSelectedUnit.hp);
             unitInfoData.Add("Order", firstSelectedUnit.currentOrder);
             if (firstSelectedUnit.stats.canHarvest)
@@ -70,7 +71,6 @@ public class PlayerManager : MonoBehaviour
                 }
                 buttonX += buttonWidth + buttonPadding;
             }
-            //style.normal.background = new Color(0.1f, 0.1f, 0.1f, 0.5f);
             if (!string.IsNullOrEmpty(GUI.tooltip))
             {
                 float offset = 40;
