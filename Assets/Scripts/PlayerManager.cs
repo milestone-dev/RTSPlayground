@@ -11,6 +11,7 @@ public class PlayerManager : MonoBehaviour
     Texture2D dragTexture;
     public int humanPlayerID;
     public float playerResources;
+    private ParticleSystem targetEmitter;
 
     public static PlayerManager instance;
 
@@ -20,6 +21,7 @@ public class PlayerManager : MonoBehaviour
         dragTexture = new Texture2D(1, 1);
         dragTexture.SetPixel(0, 0, Color.white);
         dragTexture.Apply();
+        targetEmitter = transform.Find("TargetEmitter").GetComponent<ParticleSystem>();
     }
 
     private void OnGUI()
@@ -68,14 +70,15 @@ public class PlayerManager : MonoBehaviour
     private void DrawInfoBox(Dictionary<object, object> infoData)
     {
         string infoText = "";
-        float labelHeight = 18 * infoData.Count;
+        float rowHeight = 18;
+        float labelHeight = rowHeight * infoData.Count;
 
         foreach (string key in infoData.Keys)
         {
             infoText += string.Format("{0}: {1}\n", key, infoData[key]);
         }
 
-        GUI.Label(new Rect(10, Screen.height - labelHeight, 600, labelHeight), infoText);
+        GUI.Label(new Rect(rowHeight, Screen.height - labelHeight - rowHeight, 600, labelHeight), infoText);
     }
 
     void Update()
@@ -132,9 +135,10 @@ public class PlayerManager : MonoBehaviour
                         if (unit.playerID == humanPlayerID)
                         {
                             unit.SetTargetDestination(hit.point);
+                            targetEmitter.transform.position = hit.point + new Vector3(0, 0.5f, 0);
+                            targetEmitter.Play();
                         }
                     }
-
                 } else if (hit.transform.CompareTag("Unit")) {
                     UnitController targetUnit = hit.transform.gameObject.GetComponent<UnitController>();
                     foreach (UnitController unit in selectedUnits)
@@ -142,6 +146,7 @@ public class PlayerManager : MonoBehaviour
                         if (unit.playerID == humanPlayerID)
                         {
                             unit.SetTargetUnit(targetUnit);
+                            targetUnit.FlashSelectionRing();
                         }
                     }
                 }

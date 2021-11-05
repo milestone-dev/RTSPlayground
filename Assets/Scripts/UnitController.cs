@@ -7,6 +7,7 @@ public enum Order
     Stop,
     Move,
     Follow,
+    Guard,
     Attack,
     Harvest,
     ReturnResources,
@@ -34,7 +35,7 @@ public class UnitController : MonoBehaviour
 
     public bool isNeutral  { get { return playerID == 0; } }
     public bool isResourceBusy  { get { return currentTargetUnit != null; } }
-    public bool IsEnemy(UnitController unit) { return unit.playerID != playerID; }
+    public bool IsEnemy(UnitController unit) { return !unit.isNeutral && unit.playerID != playerID; }
     public bool IsOwn(UnitController unit) { return unit.playerID == playerID; }
 
     private float DistanceToUnit(UnitController unit)
@@ -81,7 +82,7 @@ public class UnitController : MonoBehaviour
                 navObstacle.size = modelSize;
 
             collisionSize = Mathf.Max(modelSize.x, modelSize.z);
-            float circleScaleMultiplier = 75;
+            float circleScaleMultiplier = 0.65f;
             Vector3 circleScale = new Vector3(circleScaleMultiplier * collisionSize, circleScaleMultiplier  * collisionSize, circleScaleMultiplier  * collisionSize);
             highlightCircle.transform.localScale = circleScale;
         }
@@ -89,8 +90,6 @@ public class UnitController : MonoBehaviour
         // Set up variables
         hp = stats.maxHP;
         resourcesLeft = stats.resourcesProvided;
-
-
     }
 
     private void setOrder(Order order)
@@ -112,8 +111,22 @@ public class UnitController : MonoBehaviour
         if (currentOrder != Order.Harvest && mineParticleSystem.isPlaying)
             mineParticleSystem.Stop();
 
+        // Clear resource "busy" miner targeting
         if (stats.isResourceNode && currentTargetUnit != null && currentTargetUnit.currentTargetUnit != this)
             ClearTargetUnit();
+
+        if (currentOrder == Order.Move && navAgent && navAgent.destination == transform.position)
+            Stop();
+
+        if (currentOrder == Order.Stop && stats.canAttack)
+            setOrder(Order.Guard);
+
+        if (currentOrder == Order.Guard)
+        {
+            UnitController enemyUnit = FindEnemyUnitInRange();
+            if (enemyUnit)
+                SetTargetUnit(enemyUnit, Order.Attack);
+        }
 
         if (currentOrder == Order.Harvest && harvestResourceCarryAmount >= stats.harvestResourceCarryMax)
         {
@@ -138,7 +151,7 @@ public class UnitController : MonoBehaviour
 
             if (currentOrder == Order.Attack)
             {
-                //RotateTowardsUnit(currentTargetUnit);
+                RotateTowardsUnit(currentTargetUnit);
                 AttackTargetUnit();
             }
 
@@ -162,7 +175,13 @@ public class UnitController : MonoBehaviour
             navAgent.destination = currentTargetUnit.transform.position;
     }
 
-    private void StopMovingTorwardsTargetUnit()
+    private void Stop()
+    {
+        StopMovingTorwardsTarget();
+        setOrder(Order.Stop);
+    }
+
+    private void StopMovingTorwardsTarget()
     {
         if (!navAgent)
             return;
@@ -190,7 +209,6 @@ public class UnitController : MonoBehaviour
     {
         currentTargetUnit = targetUnit;
 
-        currentTargetUnit.FlashSelectionRing();
 
         if (stats.canAttack && IsEnemy(currentTargetUnit) && !currentTargetUnit.isNeutral)
             setOrder(Order.Attack);
@@ -280,7 +298,7 @@ public class UnitController : MonoBehaviour
             return;
         }
 
-        StopMovingTorwardsTargetUnit();
+        StopMovingTorwardsTarget();
         mineParticleSystem.Play();
         currentTargetUnit.currentTargetUnit = this;
         harvestCooldown += stats.harvestSpeed;
@@ -299,7 +317,7 @@ public class UnitController : MonoBehaviour
             return;
         }
 
-        StopMovingTorwardsTargetUnit();
+        StopMovingTorwardsTarget();
         PlayerManager.instance.playerResources += harvestResourceCarryAmount;
         harvestResourceCarryAmount = 0;
         if (lastTargetResourceUnit)
@@ -313,18 +331,16 @@ public class UnitController : MonoBehaviour
         if (!currentTargetUnit || !stats.canAttack)
             return;
 
-
         if (attackCooldown > 0)
             return;
 
-        if (DistanceToUnit(currentTargetUnit) > stats.attackRange)
+        if (DistanceToUnit(currentTargetUnit) > stats.attackRange + currentTargetUnit.collisionSize * .6f)
         {
             MoveTorwardsTargetUnit();
             return;
         }
 
-        StopMovingTorwardsTargetUnit();
-        RotateTowardsUnit(currentTargetUnit);
+        StopMovingTorwardsTarget();
         attackCooldown += stats.attackSpeed;
         fireParticleSystem.Play();
         currentTargetUnit.Damage(stats.attackDamage, this);
@@ -393,4 +409,34 @@ public class UnitController : MonoBehaviour
         return resourceTargetUnit;
     }
 
+    private UnitController FindEnemyUnitInRange()
+    {
+        float shortestDistance = float.PositiveInfinity;
+        UnitController enemyTargetUnit = null;
+        foreach (UnitController enemyUnit in FindObjectsOfType<UnitController>())
+        {
+            if (IsEnemy(enemyUnit))
+            {
+                float distance = DistanceToUnit(enemyUnit);
+                if (distance < stats.attackAggroRange && distance < shortestDistance)
+                {
+                    shortestDistance = distance;
+                    enemyTargetUnit = enemyUnit;
+                }
+            }
+        }
+        return enemyTargetUnit;
+    }
+
+    void OnDrawGizmos()
+    {
+        // Draw a yellow sphere at the transform's position
+        if (playerID == 0)
+            Gizmos.color = Color.cyan;
+        else if (playerID == 1)
+            Gizmos.color = Color.green;
+        else if (playerID == 2)
+            Gizmos.color = Color.red;
+        Gizmos.DrawSphere(transform.position, 0.4f);
+    }
 }

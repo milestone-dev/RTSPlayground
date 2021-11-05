@@ -14,13 +14,13 @@ public class CameraController : MonoBehaviour
     void Update()
     {
         Vector3 position = transform.position; 
-        if (Input.GetKey(KeyCode.UpArrow) || (Input.GetMouseButton(2) && Input.mousePosition.y >= Screen.height - panBorderThickness))
+        if (Input.GetKey(KeyCode.UpArrow) || (Input.mousePosition.y >= Screen.height - panBorderThickness))
             position.z += panSpeed * Time.deltaTime;
-        if (Input.GetKey(KeyCode.DownArrow) || (Input.GetMouseButton(2) && Input.mousePosition.y <= panBorderThickness))
+        if (Input.GetKey(KeyCode.DownArrow) || (Input.mousePosition.y <= panBorderThickness))
             position.z -= panSpeed * Time.deltaTime;
-        if (Input.GetKey(KeyCode.RightArrow) || (Input.GetMouseButton(2) && Input.mousePosition.x >= Screen.width - panBorderThickness))
+        if (Input.GetKey(KeyCode.RightArrow) || (Input.mousePosition.x >= Screen.width - panBorderThickness))
             position.x += panSpeed * Time.deltaTime;
-        if (Input.GetKey(KeyCode.LeftArrow) || (Input.GetMouseButton(2) && Input.mousePosition.x <= panBorderThickness))
+        if (Input.GetKey(KeyCode.LeftArrow) || (Input.mousePosition.x <= panBorderThickness))
             position.x -= panSpeed * Time.deltaTime;
 
         float scroll = Input.GetAxis("Mouse ScrollWheel");

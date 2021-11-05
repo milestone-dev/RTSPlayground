@@ -27,6 +27,7 @@ public class UnitStats : ScriptableObject
     public float movementStoppingDistance = 3;
 
     [Header("Attacking Unit")]
+    public float attackAggroRange;
     public float attackRange;
     public float attackSpeed;
     public float attackDamage;

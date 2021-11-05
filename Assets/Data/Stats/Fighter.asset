@@ -17,16 +17,19 @@ MonoBehaviour:
   canHarvest: 0
   isResourceNode: 0
   isResourceDepot: 0
+  prefabModel: {fileID: 919132149155446097, guid: 5a4c52831cc8943ccb255acb4d4f5ae2, type: 3}
   maxHP: 50
   movementSpeed: 5
   movementAngularSpeed: 180
   movementAcceleration: 5
   movementStoppingDistance: 3
+  attackAggroRange: 10
   attackRange: 3
-  attackSpeed: 0.5
+  attackSpeed: 1
   attackDamage: 5
   harvestRange: 0
   harvestSpeed: 0
   harvestAmount: 0
   harvestResourceCarryMax: 0
   resourcesProvided: 0
+  trainableUnits: []
