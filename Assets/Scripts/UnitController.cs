@@ -46,7 +46,7 @@ public class UnitController : MonoBehaviour
     private void Start()
     {
         if (!stats) {
-            Debug.LogFormat("{0} is missing UnitStats data", this);
+            Debug.Log($"{this} is missing UnitStats data");
             Die();
         }
 
@@ -72,8 +72,7 @@ public class UnitController : MonoBehaviour
             GameObject model =  Instantiate(stats.prefabModel, Vector3.zero, Quaternion.identity);
             model.transform.parent = gameObject.transform;
             Vector3 modelSize = model.GetComponent<Renderer>().bounds.size;
-            Vector3 modelPosition = gameObject.transform.position + new Vector3(0, modelSize.y/2, 0);
-            model.transform.position = modelPosition;
+            model.transform.localPosition = new Vector3(0, -0.5f, 0);
 
             BoxCollider collider = GetComponent<BoxCollider>();
             collider.size = modelSize;
@@ -281,21 +280,27 @@ public class UnitController : MonoBehaviour
         if (harvestCooldown > 0)
             return;
 
+
+        if (DistanceToUnit(currentTargetUnit) > stats.harvestRange + currentTargetUnit.collisionSize * .5f)
+        {
+            mineParticleSystem.Stop();
+            MoveTorwardsTargetUnit();
+            return;
+        }
+
         if (currentTargetUnit.isResourceBusy && currentTargetUnit.currentTargetUnit != this)
         {
             UnitController nextResource = FindClosestFreeResource();
+            mineParticleSystem.Stop();
             if (nextResource)
             {
                 SetTargetUnit(nextResource, Order.Harvest);
             } else
             {
+                MoveTorwardsTargetUnit();
+                StopMovingTorwardsTarget();
                 return;
             }
-        }
-        if (DistanceToUnit(currentTargetUnit) > stats.harvestRange + currentTargetUnit.collisionSize * .6f)
-        {
-            MoveTorwardsTargetUnit();
-            return;
         }
 
         StopMovingTorwardsTarget();
@@ -399,7 +404,7 @@ public class UnitController : MonoBehaviour
             if (resourceUnit.isNeutral && resourceUnit.stats.isResourceNode && !resourceUnit.isResourceBusy)
             {
                 float distance = DistanceToUnit(resourceUnit);
-                if (distance < shortestDistance)
+                if (distance <= stats.harvestSeekRange && distance < shortestDistance)
                 {
                     shortestDistance = distance;
                     resourceTargetUnit = resourceUnit;

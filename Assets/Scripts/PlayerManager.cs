@@ -22,6 +22,7 @@ public class PlayerManager : MonoBehaviour
         dragTexture.SetPixel(0, 0, Color.white);
         dragTexture.Apply();
         targetEmitter = transform.Find("TargetEmitter").GetComponent<ParticleSystem>();
+        playerResources = 100;
     }
 
     private void OnGUI()
@@ -38,15 +39,15 @@ public class PlayerManager : MonoBehaviour
         {
             UnitController firstSelectedUnit = selectedUnits[0];
             var unitInfoData = new Dictionary<object, object>();
-            unitInfoData.Add(firstSelectedUnit.stats.name, firstSelectedUnit.stats.type);
+            unitInfoData.Add(firstSelectedUnit.stats.unitName, null);
             unitInfoData.Add("HP", firstSelectedUnit.hp);
             unitInfoData.Add("Order", firstSelectedUnit.currentOrder);
             if (firstSelectedUnit.stats.canHarvest)
-                unitInfoData.Add("Carry Amount", firstSelectedUnit.harvestResourceCarryAmount);
+                unitInfoData.Add("Carrying Resources", firstSelectedUnit.harvestResourceCarryAmount);
             if (firstSelectedUnit.stats.isResourceNode)
                 unitInfoData.Add("Resources", firstSelectedUnit.resourcesLeft);
             if (firstSelectedUnit.currentTargetUnit)
-                unitInfoData.Add("Target Unit", firstSelectedUnit.currentTargetUnit.stats.name + " - " + firstSelectedUnit.currentTargetUnit);
+                unitInfoData.Add("Target Unit", $"{firstSelectedUnit.currentTargetUnit.stats.unitName} ({firstSelectedUnit.currentTargetUnit})");
 
             DrawInfoBox(unitInfoData);
 
@@ -56,11 +57,30 @@ public class PlayerManager : MonoBehaviour
             float buttonWidth = 48;
             for (var i = 0; i < firstSelectedUnit.stats.trainableUnits.Count; i++)
             {
-                UnitStats trainableUnit = firstSelectedUnit.stats.trainableUnits[i];
-                if (GUI.Button(new Rect(Screen.width - 200 + buttonX, Screen.height - 100 + buttonY, buttonWidth, buttonWidth), trainableUnit.name)) {
-                    firstSelectedUnit.TrainUnit(trainableUnit);
+                UnitStats trainableUnitStats = firstSelectedUnit.stats.trainableUnits[i];
+                if (GUI.Button(
+                    new Rect(Screen.width - 200 + buttonX, Screen.height - 100 + buttonY, buttonWidth, buttonWidth),
+                    new GUIContent(trainableUnitStats.name, trainableUnitStats.GetTooltipText()))
+                ) {
+                    if (playerResources >= trainableUnitStats.productionCost)
+                    {
+                        firstSelectedUnit.TrainUnit(trainableUnitStats);
+                        playerResources -= trainableUnitStats.productionCost;
+                    }
                 }
                 buttonX += buttonWidth + buttonPadding;
+            }
+            //style.normal.background = new Color(0.1f, 0.1f, 0.1f, 0.5f);
+            if (!string.IsNullOrEmpty(GUI.tooltip))
+            {
+                float offset = 40;
+                GUIStyle style = GUI.skin.box;
+                style.alignment = TextAnchor.MiddleLeft;
+                style.wordWrap = true;
+                Vector2 size = Vector2.zero;
+                size.x = 100;
+                size.y = style.CalcHeight(new GUIContent(GUI.tooltip), size.x);
+                GUI.Box(new Rect(Input.mousePosition.x - size.x - offset, Screen.height - Input.mousePosition.y - size.y - offset, size.x, size.y), GUI.tooltip);
             }
         }
 

@@ -17,18 +17,24 @@ MonoBehaviour:
   canHarvest: 1
   isResourceNode: 0
   isResourceDepot: 0
+  unitName: Worker
+  unitDescription: Basic construciton and harvesting unit.
+  iconTexture: {fileID: 0}
   prefabModel: {fileID: 919132149155446097, guid: 5a4c52831cc8943ccb255acb4d4f5ae2, type: 3}
+  portraitModel: {fileID: 0}
   maxHP: 25
-  movementSpeed: 10
+  productionCost: 10
+  movementSpeed: 15
+  movementAcceleration: 15
   movementAngularSpeed: 1000
-  movementAcceleration: 10
   movementStoppingDistance: 3
   attackAggroRange: 0
   attackRange: 2
   attackSpeed: 0.5
   attackDamage: 5
-  harvestRange: 0.75
-  harvestSpeed: 0.25
+  harvestSeekRange: 20
+  harvestRange: 0.1
+  harvestSpeed: 2
   harvestAmount: 1
   harvestResourceCarryMax: 8
   resourcesProvided: 0
