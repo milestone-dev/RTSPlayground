@@ -13,9 +13,6 @@ public class CameraController : MonoBehaviour
 
     private void Start()
     {
-#if UNITY_STANDALONE
-        mouseMovement = true;
-#endif
 #if UNITY_WEBGL
         mouseMovement = true;
 #endif

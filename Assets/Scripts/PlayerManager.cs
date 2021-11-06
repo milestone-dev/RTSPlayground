@@ -50,6 +50,16 @@ public class PlayerManager : MonoBehaviour
             if (firstSelectedUnit.currentTargetUnit)
                 unitInfoData.Add("Target Unit", $"{firstSelectedUnit.currentTargetUnit.stats.unitName} ({firstSelectedUnit.currentTargetUnit})");
 
+            if (firstSelectedUnit.isUnitTrainer)
+            {
+                unitInfoData.Add("Training Queue", firstSelectedUnit.productionQueue.Count);
+                if (firstSelectedUnit.productionQueue.Count != 0)
+                {
+                    unitInfoData.Add("Training remaining time", firstSelectedUnit.remainingProductionTime);
+                }
+            }
+
+
             DrawInfoBox(unitInfoData);
 
             float buttonX = 0;
@@ -187,7 +197,6 @@ public class PlayerManager : MonoBehaviour
         return within;
 
     }
-
 
     private void SelectUnit(UnitController unit, bool includeInSelection = false)
     {

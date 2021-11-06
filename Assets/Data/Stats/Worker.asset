@@ -23,17 +23,18 @@ MonoBehaviour:
   prefabModel: {fileID: 919132149155446097, guid: 5a4c52831cc8943ccb255acb4d4f5ae2, type: 3}
   portraitModel: {fileID: 0}
   maxHP: 25
-  productionCost: 10
+  productionCost: 25
+  productionTime: 15
   movementSpeed: 15
   movementAcceleration: 15
   movementAngularSpeed: 1000
-  movementStoppingDistance: 3
+  movementStoppingDistance: 2
   attackAggroRange: 0
   attackRange: 2
   attackSpeed: 0.5
   attackDamage: 5
   harvestSeekRange: 20
-  harvestRange: 0.1
+  harvestRange: 1
   harvestSpeed: 2
   harvestAmount: 1
   harvestResourceCarryMax: 8

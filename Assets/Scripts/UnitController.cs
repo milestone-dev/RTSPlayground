@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.AI;
 using System.Collections;
+using System.Collections.Generic;
 
 public enum Order
 {
@@ -21,6 +22,7 @@ public class UnitController : MonoBehaviour
     private ParticleSystem fireParticleSystem;
     private ParticleSystem mineParticleSystem;
     private GameObject highlightCircle;
+    private BoxCollider boxCollider;
     public float collisionSize;
     public UnitStats stats;
     public int playerID = 0;
@@ -29,18 +31,29 @@ public class UnitController : MonoBehaviour
     public float attackCooldown;
     public float harvestCooldown;
     public float harvestResourceCarryAmount;
+    public Vector3 rallyPointPosition;
+    public UnitController rallyPointUnit;
     public UnitController currentTargetUnit;
     public UnitController lastTargetResourceUnit;
     public float resourcesLeft;
 
+    public List<UnitStats> productionQueue = new List<UnitStats>();
+    public float remainingProductionTime;
+
     public bool isNeutral  { get { return playerID == 0; } }
     public bool isResourceBusy  { get { return currentTargetUnit != null; } }
+    public bool isUnitTrainer { get { return stats.trainableUnits.Count != 0; } }
     public bool IsEnemy(UnitController unit) { return !unit.isNeutral && unit.playerID != playerID; }
     public bool IsOwn(UnitController unit) { return unit.playerID == playerID; }
 
     private float DistanceToUnit(UnitController unit)
     {
         return Vector3.Distance(transform.position, unit.transform.position);
+    }
+
+    private float DistanceToUnitBounds(UnitController unit)
+    {
+        return Vector3.Distance(transform.position, unit.gameObject.GetComponent<Collider>().ClosestPoint(transform.position));
     }
 
     private void Start()
@@ -74,8 +87,8 @@ public class UnitController : MonoBehaviour
             Vector3 modelSize = model.GetComponent<Renderer>().bounds.size;
             model.transform.localPosition = new Vector3(0, -0.5f, 0);
 
-            BoxCollider collider = GetComponent<BoxCollider>();
-            collider.size = modelSize;
+            boxCollider = GetComponent<BoxCollider>();
+            boxCollider.size = modelSize;
 
             if (navObstacle)
                 navObstacle.size = modelSize;
@@ -165,6 +178,19 @@ public class UnitController : MonoBehaviour
             {
                 ReturnResourcesToDepotUnit();
             }
+        }
+
+        if (isUnitTrainer)
+        {
+            HandleUnitTraining();
+        }
+
+        if (stats.canHarvest)
+        {
+            if ((currentOrder == Order.Harvest || currentOrder == Order.ReturnResources) && navAgent.radius != 0.4f)
+                navAgent.radius = 0.4f;
+            else if ((currentOrder != Order.Harvest && currentOrder != Order.ReturnResources) && navAgent.radius != 0.5f)
+                navAgent.radius = 0.5f;
         }
     }
 
@@ -280,8 +306,7 @@ public class UnitController : MonoBehaviour
         if (harvestCooldown > 0)
             return;
 
-
-        if (DistanceToUnit(currentTargetUnit) > stats.harvestRange + currentTargetUnit.collisionSize * .5f)
+        if (DistanceToUnitBounds(currentTargetUnit) > stats.harvestRange)
         {
             mineParticleSystem.Stop();
             MoveTorwardsTargetUnit();
@@ -299,8 +324,8 @@ public class UnitController : MonoBehaviour
             {
                 MoveTorwardsTargetUnit();
                 StopMovingTorwardsTarget();
-                return;
             }
+            return;
         }
 
         StopMovingTorwardsTarget();
@@ -351,13 +376,42 @@ public class UnitController : MonoBehaviour
         currentTargetUnit.Damage(stats.attackDamage, this);
     }
 
-    public void TrainUnit(UnitStats stats)
+    public void TrainUnit(UnitStats unitStats)
+    {
+        if (this.productionQueue.Count == 0)
+            this.remainingProductionTime = unitStats.productionTime;
+
+        this.productionQueue.Add(unitStats);
+    }
+
+    public void HandleUnitTraining()
+    {
+        if (this.productionQueue.Count == 0)
+            return;
+
+        UnitStats firstUnitStats = this.productionQueue[0];
+        if (this.remainingProductionTime <= 0)
+        {
+            // Create the unit and remove it from the queue
+            CreateUnit(firstUnitStats);
+            this.productionQueue.RemoveAt(0);
+
+            // Queue up the next unit
+            if (this.productionQueue.Count > 0)
+                this.remainingProductionTime = this.productionQueue[0].productionTime;
+        } else
+        {
+            this.remainingProductionTime -= Time.deltaTime;
+        }
+    }
+
+    public void CreateUnit(UnitStats unitStats)
     {
         Vector3 position = transform.position;
         position.x += collisionSize;
         GameObject unitObject = Instantiate(Resources.Load<GameObject>("UnitPrefab"), position, Quaternion.identity);
         UnitController unit = unitObject.GetComponent<UnitController>();
-        unit.stats = stats;
+        unit.stats = unitStats;
         unit.playerID = playerID;
         if (unit.stats.canHarvest)
         {
@@ -432,6 +486,8 @@ public class UnitController : MonoBehaviour
         }
         return enemyTargetUnit;
     }
+
+ 
 
     void OnDrawGizmos()
     {

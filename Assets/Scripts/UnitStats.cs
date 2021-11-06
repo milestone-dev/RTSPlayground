@@ -28,6 +28,7 @@ public class UnitStats : ScriptableObject
     [Header("Base stats")]
     public float maxHP = 1;
     public float productionCost = 0;
+    public float productionTime = 0;
 
     public float movementSpeed = 5;
     public float movementAcceleration = 5;
