@@ -7,6 +7,7 @@ public class PlayerManager : MonoBehaviour
     RaycastHit hit;
     List<UnitController> selectedUnits = new List<UnitController>();
     bool isDragging;
+    bool isPlacingStructre;
     Vector3 mousePosition;
     public int humanPlayerID;
     public float playerResources;

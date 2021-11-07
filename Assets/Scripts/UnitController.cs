@@ -23,6 +23,7 @@ public class UnitController : MonoBehaviour
     private ParticleSystem fireParticleSystem;
     private ParticleSystem mineParticleSystem;
     private GameObject highlightCircle;
+    private GameObject mineralsObject;
     private BoxCollider boxCollider;
     public float collisionSize;
     public UnitType type;
@@ -74,6 +75,7 @@ public class UnitController : MonoBehaviour
         fireParticleSystem = transform.Find("FireParticleSystem").GetComponent<ParticleSystem>();
         mineParticleSystem = transform.Find("MineParticleSystem").GetComponent<ParticleSystem>();
         highlightCircle = transform.Find("Highlight").gameObject;
+        mineralsObject = transform.Find("Minerals").gameObject;
 
         if (isUnit)
         {
@@ -130,6 +132,11 @@ public class UnitController : MonoBehaviour
 
         if (currentOrder != Order.Harvest && mineParticleSystem.isPlaying)
             mineParticleSystem.Stop();
+
+        if (type.canHarvest && harvestResourceCarryAmount > 0 && !mineralsObject.activeSelf)
+            mineralsObject.SetActive(true);
+        else if (type.canHarvest && harvestResourceCarryAmount == 0 && mineralsObject.activeSelf)
+            mineralsObject.SetActive(false);
 
         // Clear resource "busy" miner targeting
         if (type.isResourceNode && currentTargetUnit != null && currentTargetUnit.currentTargetUnit != this)
