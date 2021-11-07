@@ -2,17 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum UnitType
+public enum UnitClass
 {
     Unit,
     Building
 }
 
 [CreateAssetMenu(fileName = "Unit Stats", menuName = "Unit Stats")]
-public class UnitStats : ScriptableObject
+public class UnitType : ScriptableObject
 {
     [Header("Classification")]
-    public UnitType type;
+    public UnitClass unitClass;
     public bool canAttack = false;
     public bool canHarvest = false;
     public bool isResourceNode = false;
@@ -53,7 +53,7 @@ public class UnitStats : ScriptableObject
     public float resourcesProvided;
 
     [Header("Training")]
-    public List<UnitStats> trainableUnits;
+    public List<UnitType> trainableUnits;
 
     public string GetTooltipText()
     {

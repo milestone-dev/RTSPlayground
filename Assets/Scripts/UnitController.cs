@@ -24,7 +24,7 @@ public class UnitController : MonoBehaviour
     private GameObject highlightCircle;
     private BoxCollider boxCollider;
     public float collisionSize;
-    public UnitStats stats;
+    public UnitType stats;
     public int playerID = 0;
     public Order currentOrder;
     public float hp;
@@ -37,7 +37,7 @@ public class UnitController : MonoBehaviour
     public UnitController lastTargetResourceUnit;
     public float resourcesLeft;
 
-    public List<UnitStats> productionQueue = new List<UnitStats>();
+    public List<UnitType> productionQueue = new List<UnitType>();
     public float remainingProductionTime;
 
     public bool isNeutral  { get { return playerID == 0; } }
@@ -60,7 +60,7 @@ public class UnitController : MonoBehaviour
     private void Start()
     {
         if (!stats) {
-            Debug.Log($"{this} is missing UnitStats data");
+            Debug.Log($"{this} is missing UnitType data");
             Die();
         }
 
@@ -68,7 +68,7 @@ public class UnitController : MonoBehaviour
         mineParticleSystem = transform.Find("MineParticleSystem").GetComponent<ParticleSystem>();
         highlightCircle = transform.Find("Highlight").gameObject;
 
-        if (stats.type == UnitType.Unit)
+        if (stats.unitClass == UnitClass.Unit)
         {
             navAgent = gameObject.AddComponent<NavMeshAgent>();
             navAgent.speed = stats.movementSpeed;
@@ -76,7 +76,7 @@ public class UnitController : MonoBehaviour
             navAgent.acceleration = stats.movementAcceleration;
             navAgent.speed = stats.movementSpeed;
         }
-        else if (stats.type == UnitType.Building)
+        else if (stats.unitClass == UnitClass.Building)
         {
             navObstacle = gameObject.AddComponent<NavMeshObstacle>();
         }
@@ -377,7 +377,7 @@ public class UnitController : MonoBehaviour
         currentTargetUnit.Damage(stats.attackDamage, this);
     }
 
-    public void TrainUnit(UnitStats unitStats)
+    public void TrainUnit(UnitType unitStats)
     {
         if (this.productionQueue.Count == 0)
             this.remainingProductionTime = unitStats.productionTime;
@@ -390,11 +390,11 @@ public class UnitController : MonoBehaviour
         if (this.productionQueue.Count == 0)
             return;
 
-        UnitStats firstUnitStats = this.productionQueue[0];
+        UnitType firstUnitType = this.productionQueue[0];
         if (this.remainingProductionTime <= 0)
         {
             // Create the unit and remove it from the queue
-            CreateUnit(firstUnitStats);
+            CreateUnit(firstUnitType);
             this.productionQueue.RemoveAt(0);
 
             // Queue up the next unit
@@ -406,7 +406,7 @@ public class UnitController : MonoBehaviour
         }
     }
 
-    public void CreateUnit(UnitStats unitStats)
+    public void CreateUnit(UnitType unitStats)
     {
         Vector3 position = transform.position;
         position.x += collisionSize;

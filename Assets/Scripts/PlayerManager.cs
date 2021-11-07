@@ -93,7 +93,7 @@ public class PlayerManager : MonoBehaviour
             GUI.skin.button.fontSize = 10;
             for (var i = 0; i < firstSelectedUnit.stats.trainableUnits.Count; i++)
             {
-                UnitStats trainableUnitStats = firstSelectedUnit.stats.trainableUnits[i];
+                UnitType trainableUnitStats = firstSelectedUnit.stats.trainableUnits[i];
                 if (GUI.Button(
                     new Rect(gridX + buttonX, gridY + buttonY, buttonWidth, buttonWidth),
                     new GUIContent(trainableUnitStats.name, trainableUnitStats.GetTooltipText()))
@@ -181,7 +181,7 @@ public class PlayerManager : MonoBehaviour
                 }
                 foreach (UnitController unit in FindObjectsOfType<UnitController>())
                 {
-                    if (unit.playerID == humanPlayerID && unit.stats.type == UnitType.Unit && IsUnitWithinSelectionBounds(unit.transform))
+                    if (unit.playerID == humanPlayerID && unit.stats.unitClass == UnitClass.Unit && IsUnitWithinSelectionBounds(unit.transform))
                     {
                         SelectUnit(unit, true);
                     }
