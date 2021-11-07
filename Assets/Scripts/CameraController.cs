@@ -13,9 +13,7 @@ public class CameraController : MonoBehaviour
 
     private void Start()
     {
-#if UNITY_WEBGL
-        mouseMovement = true;
-#endif
+
     }
 
     // Update is called once per frame 

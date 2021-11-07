@@ -43,6 +43,7 @@ public class UnitController : MonoBehaviour
     public bool isNeutral  { get { return playerID == 0; } }
     public bool isResourceBusy  { get { return currentTargetUnit != null; } }
     public bool isUnitTrainer { get { return stats.trainableUnits.Count != 0; } }
+    public bool isTrainingUnit { get { return isUnitTrainer && remainingProductionTime > 0 && productionQueue.Count > 0; } }
     public bool IsEnemy(UnitController unit) { return !unit.isNeutral && unit.playerID != playerID; }
     public bool IsOwn(UnitController unit) { return unit.playerID == playerID; }
 

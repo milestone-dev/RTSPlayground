@@ -8,7 +8,6 @@ public class PlayerManager : MonoBehaviour
     List<UnitController> selectedUnits = new List<UnitController>();
     bool isDragging;
     Vector3 mousePosition;
-    Texture2D dragTexture;
     public int humanPlayerID;
     public float playerResources;
     private ParticleSystem targetEmitter;
@@ -18,9 +17,6 @@ public class PlayerManager : MonoBehaviour
     private void Start()
     {
         instance = this;
-        dragTexture = new Texture2D(1, 1);
-        dragTexture.SetPixel(0, 0, Color.white);
-        dragTexture.Apply();
         targetEmitter = transform.Find("TargetEmitter").GetComponent<ParticleSystem>();
         playerResources = 100;
     }
@@ -35,8 +31,15 @@ public class PlayerManager : MonoBehaviour
             DrawSelectionBox(rect, new Color(.8f, .8f, .8f, .1f), Color.white);
         }
 
+        const float inset = 12;
+        const float padding = 24;
+        const float sectionHeight = 180;
+
+        GUI.BeginGroup(new Rect(inset, Screen.height - sectionHeight, Screen.width - inset * 2, sectionHeight - inset));
+        GUI.Box(new Rect(0, 0, Screen.width - inset * 2, sectionHeight - inset), "");
         if (selectedUnits.Count > 0)
         {
+            // Unit info
             UnitController firstSelectedUnit = selectedUnits[0];
             var unitInfoData = new Dictionary<object, object>();
             unitInfoData.Add(firstSelectedUnit.stats.unitName, null);
@@ -53,24 +56,46 @@ public class PlayerManager : MonoBehaviour
             if (firstSelectedUnit.isUnitTrainer)
             {
                 unitInfoData.Add("Training Queue", firstSelectedUnit.productionQueue.Count);
-                if (firstSelectedUnit.productionQueue.Count != 0)
-                {
-                    unitInfoData.Add("Training remaining time", firstSelectedUnit.remainingProductionTime);
-                }
+            }
+            string infoText = "";
+            const float rowHeight = 18;
+            float labelHeight = rowHeight * unitInfoData.Count;
+
+            foreach (string key in unitInfoData.Keys)
+            {
+                infoText += string.Format("{0}: {1}\n", key, unitInfoData[key]);
             }
 
+            GUI.Label(new Rect(padding, padding, 600, labelHeight), infoText);
 
-            DrawInfoBox(unitInfoData);
+            // Progress bar
+            if (firstSelectedUnit.isTrainingUnit) {
+                Color defaultColor = GUI.backgroundColor;
+                const float progressBoxWidth = 120;
+                const float progressBoxHeight = 12;
+                const float progressBoxY = sectionHeight / 2 - progressBoxHeight;
+                const float progressBoxX = 300;
+                float progress = Mathf.Max(0, (firstSelectedUnit.productionQueue[0].productionTime - firstSelectedUnit.remainingProductionTime) / firstSelectedUnit.productionQueue[0].productionTime);
+                GUI.color = new Color(1, 1, 1, 0.1f);
+                GUI.DrawTexture(new Rect(progressBoxX, progressBoxY, progressBoxWidth, progressBoxHeight), Texture2D.whiteTexture);
+                GUI.color = new Color(1, 1, 1);
+                GUI.DrawTexture(new Rect(progressBoxX, progressBoxY, progressBoxWidth * progress, progressBoxHeight), Texture2D.whiteTexture);
+            }
 
+            // Command card
+            const float buttonPadding = 4;
+            const float buttonWidth = 48;
+            const float gridWidth = 200;
+            const float gridY = padding;
+            float gridX = Screen.width - padding - gridWidth;
             float buttonX = 0;
             float buttonY = 0;
-            float buttonPadding = 8;
-            float buttonWidth = 48;
+            GUI.skin.button.fontSize = 10;
             for (var i = 0; i < firstSelectedUnit.stats.trainableUnits.Count; i++)
             {
                 UnitStats trainableUnitStats = firstSelectedUnit.stats.trainableUnits[i];
                 if (GUI.Button(
-                    new Rect(Screen.width - 200 + buttonX, Screen.height - 100 + buttonY, buttonWidth, buttonWidth),
+                    new Rect(gridX + buttonX, gridY + buttonY, buttonWidth, buttonWidth),
                     new GUIContent(trainableUnitStats.name, trainableUnitStats.GetTooltipText()))
                 ) {
                     if (playerResources >= trainableUnitStats.productionCost)
@@ -79,21 +104,32 @@ public class PlayerManager : MonoBehaviour
                         playerResources -= trainableUnitStats.productionCost;
                     }
                 }
-                buttonX += buttonWidth + buttonPadding;
-            }
-            if (!string.IsNullOrEmpty(GUI.tooltip))
-            {
-                float offset = 40;
-                GUIStyle style = GUI.skin.box;
-                style.alignment = TextAnchor.MiddleLeft;
-                style.wordWrap = true;
-                Vector2 size = Vector2.zero;
-                size.x = 100;
-                size.y = style.CalcHeight(new GUIContent(GUI.tooltip), size.x);
-                GUI.Box(new Rect(Input.mousePosition.x - size.x - offset, Screen.height - Input.mousePosition.y - size.y - offset, size.x, size.y), GUI.tooltip);
-            }
-        }
 
+                if ((i + 1) % 3 == 0)
+                {
+                    buttonX = 0;
+                    buttonY += buttonWidth + buttonPadding;
+                }
+                else
+                {
+                    buttonX += buttonWidth + buttonPadding;
+                }
+            }
+
+        }
+        GUI.EndGroup();
+
+        if (!string.IsNullOrEmpty(GUI.tooltip))
+        {
+            float offset = 20;
+            GUIStyle style = GUI.skin.box;
+            style.alignment = TextAnchor.MiddleLeft;
+            style.wordWrap = true;
+            Vector2 size = Vector2.zero;
+            size.x = 100;
+            size.y = style.CalcHeight(new GUIContent(GUI.tooltip), size.x);
+            GUI.Box(new Rect(Input.mousePosition.x - size.x - offset, Screen.height - Input.mousePosition.y - size.y - offset, size.x, size.y), GUI.tooltip);
+        }
         
     }
 
@@ -229,13 +265,13 @@ public class PlayerManager : MonoBehaviour
     public void DrawSelectionBox(Rect rect, Color color, Color borderColor)
     {
         GUI.color = color;
-        GUI.DrawTexture(rect, dragTexture);
+        GUI.DrawTexture(rect, Texture2D.whiteTexture);
 
         GUI.color = borderColor;
-        GUI.DrawTexture(new Rect(rect.xMin, rect.yMin, rect.width, 1), dragTexture);
-        GUI.DrawTexture(new Rect(rect.xMin, rect.yMin, 1, rect.height), dragTexture);
-        GUI.DrawTexture(new Rect(rect.xMax - 1, rect.yMin, 1, rect.height), dragTexture);
-        GUI.DrawTexture(new Rect(rect.xMin, rect.yMax - 1, rect.width, 1), dragTexture);
+        GUI.DrawTexture(new Rect(rect.xMin, rect.yMin, rect.width, 1), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(rect.xMin, rect.yMin, 1, rect.height), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(rect.xMax - 1, rect.yMin, 1, rect.height), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(rect.xMin, rect.yMax - 1, rect.width, 1), Texture2D.whiteTexture);
 
     }
 

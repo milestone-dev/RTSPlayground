@@ -18,20 +18,22 @@ MonoBehaviour:
   isResourceNode: 0
   isResourceDepot: 1
   unitName: Town Hall
-  unitTooltip: Primary woker construction base and resource depot
+  unitDescription: 
   iconTexture: {fileID: 0}
   prefabModel: {fileID: 919132149155446097, guid: 55ed7a2d9f88d4c32bba8643b77ccc0c, type: 3}
   portraitModel: {fileID: 0}
   maxHP: 1000
   productionCost: 0
+  productionTime: 0
   movementSpeed: 0
-  movementAngularSpeed: 0
   movementAcceleration: 0
+  movementAngularSpeed: 0
   movementStoppingDistance: 0
   attackAggroRange: 0
   attackRange: 0
   attackSpeed: 0
   attackDamage: 0
+  harvestSeekRange: 0
   harvestRange: 0
   harvestSpeed: 0
   harvestAmount: 0
