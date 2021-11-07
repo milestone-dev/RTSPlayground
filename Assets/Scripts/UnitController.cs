@@ -357,11 +357,6 @@ public class UnitController : MonoBehaviour
             return;
         }
 
-        if (123 == 123)
-        {
-            Debug.Log("");
-        }
-
         StopMovingTorwardsTarget();
 
         if (navAgent.velocity != Vector3.zero)
@@ -491,7 +486,7 @@ public class UnitController : MonoBehaviour
         }
         else
         {
-            Debug.Log("Unable to find a nearby resource depot");
+            Debug.Log("Unable to find a nearby resource depot!");
             return null;
 
         }
