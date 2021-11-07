@@ -24,15 +24,16 @@ public class UnitController : MonoBehaviour
     private GameObject highlightCircle;
     private BoxCollider boxCollider;
     public float collisionSize;
-    public UnitType stats;
+    public UnitType type;
     public int playerID = 0;
     public Order currentOrder;
     public float hp;
     public float attackCooldown;
     public float harvestCooldown;
     public float harvestResourceCarryAmount;
-    public Vector3 rallyPointPosition;
-    public UnitController rallyPointUnit;
+    public Vector3 rallyPointPosition = Vector3.zero;
+    public UnitController rallyPointUnit = null;
+    public Vector3 currentTargetPosition = Vector3.zero;
     public UnitController currentTargetUnit;
     public UnitController lastTargetResourceUnit;
     public float resourcesLeft;
@@ -42,8 +43,10 @@ public class UnitController : MonoBehaviour
 
     public bool isNeutral  { get { return playerID == 0; } }
     public bool isResourceBusy  { get { return currentTargetUnit != null; } }
-    public bool isUnitTrainer { get { return stats.trainableUnits.Count != 0; } }
+    public bool isUnitTrainer { get { return type.trainableUnits.Count != 0; } }
     public bool isTrainingUnit { get { return isUnitTrainer && remainingProductionTime > 0 && productionQueue.Count > 0; } }
+    public bool isUnit {  get { return type.unitClass == UnitClass.Unit; } }
+    public bool isBuilding {  get { return type.unitClass == UnitClass.Building; } }
     public bool IsEnemy(UnitController unit) { return !unit.isNeutral && unit.playerID != playerID; }
     public bool IsOwn(UnitController unit) { return unit.playerID == playerID; }
 
@@ -59,31 +62,33 @@ public class UnitController : MonoBehaviour
 
     private void Start()
     {
-        if (!stats) {
+        if (!type) {
             Debug.Log($"{this} is missing UnitType data");
             Die();
         }
+
+        name = type.name;
 
         fireParticleSystem = transform.Find("FireParticleSystem").GetComponent<ParticleSystem>();
         mineParticleSystem = transform.Find("MineParticleSystem").GetComponent<ParticleSystem>();
         highlightCircle = transform.Find("Highlight").gameObject;
 
-        if (stats.unitClass == UnitClass.Unit)
+        if (isUnit)
         {
             navAgent = gameObject.AddComponent<NavMeshAgent>();
-            navAgent.speed = stats.movementSpeed;
-            navAgent.angularSpeed = stats.movementAngularSpeed;
-            navAgent.acceleration = stats.movementAcceleration;
-            navAgent.speed = stats.movementSpeed;
+            navAgent.speed = type.movementSpeed;
+            navAgent.angularSpeed = type.movementAngularSpeed;
+            navAgent.acceleration = type.movementAcceleration;
+            navAgent.speed = type.movementSpeed;
         }
-        else if (stats.unitClass == UnitClass.Building)
+        else if (isBuilding)
         {
             navObstacle = gameObject.AddComponent<NavMeshObstacle>();
         }
 
-        if (stats.prefabModel)
+        if (type.prefabModel)
         {
-            GameObject model =  Instantiate(stats.prefabModel, Vector3.zero, Quaternion.identity);
+            GameObject model =  Instantiate(type.prefabModel, Vector3.zero, Quaternion.identity);
             model.transform.parent = gameObject.transform;
             Vector3 modelSize = model.GetComponent<Renderer>().bounds.size;
             model.transform.localPosition = new Vector3(0, -0.5f, 0);
@@ -101,8 +106,8 @@ public class UnitController : MonoBehaviour
         }
 
         // Set up variables
-        hp = stats.maxHP;
-        resourcesLeft = stats.resourcesProvided;
+        hp = type.maxHP;
+        resourcesLeft = type.resourcesProvided;
     }
 
     private void setOrder(Order order)
@@ -125,13 +130,16 @@ public class UnitController : MonoBehaviour
             mineParticleSystem.Stop();
 
         // Clear resource "busy" miner targeting
-        if (stats.isResourceNode && currentTargetUnit != null && currentTargetUnit.currentTargetUnit != this)
+        if (type.isResourceNode && currentTargetUnit != null && currentTargetUnit.currentTargetUnit != this)
             ClearTargetUnit();
+
+        if (navAgent && currentTargetPosition != Vector3.zero && navAgent.destination != currentTargetPosition)
+            navAgent.destination = currentTargetPosition;
 
         if (currentOrder == Order.Move && navAgent && navAgent.destination == transform.position)
             Stop();
 
-        if (currentOrder == Order.Stop && stats.canAttack)
+        if (currentOrder == Order.Stop && type.canAttack)
             setOrder(Order.Guard);
 
         if (currentOrder == Order.Guard)
@@ -141,7 +149,7 @@ public class UnitController : MonoBehaviour
                 SetTargetUnit(enemyUnit, Order.Attack);
         }
 
-        if (currentOrder == Order.Harvest && harvestResourceCarryAmount >= stats.harvestResourceCarryMax)
+        if (currentOrder == Order.Harvest && harvestResourceCarryAmount >= type.harvestResourceCarryMax)
         {
             UnitController closestResourceDepotUnit = FindClosestResourceDepot();
             if (closestResourceDepotUnit)
@@ -186,7 +194,7 @@ public class UnitController : MonoBehaviour
             HandleUnitTraining();
         }
 
-        if (stats.canHarvest)
+        if (type.canHarvest)
         {
             if ((currentOrder == Order.Harvest || currentOrder == Order.ReturnResources) && navAgent.radius != 0.4f)
                 navAgent.radius = 0.4f;
@@ -197,8 +205,10 @@ public class UnitController : MonoBehaviour
 
     private void MoveTorwardsTargetUnit()
     {
+        Vector3 currentTargetUnitClosestPosition = currentTargetUnit.gameObject.GetComponent<Collider>().ClosestPoint(transform.position);
+
         if (navAgent)
-            navAgent.destination = currentTargetUnit.transform.position;
+            navAgent.destination = currentTargetUnitClosestPosition;
     }
 
     private void Stop()
@@ -212,6 +222,7 @@ public class UnitController : MonoBehaviour
         if (!navAgent)
             return;
 
+        currentTargetPosition = Vector3.zero;
         navAgent.isStopped = true;
         navAgent.ResetPath();
     }
@@ -223,12 +234,11 @@ public class UnitController : MonoBehaviour
         transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, 0.05f);
     }
 
-    public void SetTargetDestination(Vector3 destination)
+    public void SetTargetPosition(Vector3 position)
     {
+        currentTargetPosition = position;
         setOrder(Order.Move);
         currentTargetUnit = null;
-        if (navAgent)
-            navAgent.destination = destination;
     }
 
     public void SetTargetUnit(UnitController targetUnit)
@@ -236,11 +246,11 @@ public class UnitController : MonoBehaviour
         currentTargetUnit = targetUnit;
 
 
-        if (stats.canAttack && IsEnemy(currentTargetUnit) && !currentTargetUnit.isNeutral)
+        if (type.canAttack && IsEnemy(currentTargetUnit) && !currentTargetUnit.isNeutral)
             setOrder(Order.Attack);
-        else if (stats.canHarvest && currentTargetUnit.isNeutral && currentTargetUnit.stats.isResourceNode)
+        else if (type.canHarvest && currentTargetUnit.isNeutral && currentTargetUnit.type.isResourceNode)
             setOrder(Order.Harvest);
-        else if (stats.canHarvest && harvestResourceCarryAmount > 0 && IsOwn(currentTargetUnit) && currentTargetUnit.stats.isResourceDepot)
+        else if (type.canHarvest && harvestResourceCarryAmount > 0 && IsOwn(currentTargetUnit) && currentTargetUnit.type.isResourceDepot)
             setOrder(Order.ReturnResources);
         else if (IsOwn(currentTargetUnit))
             setOrder(Order.Follow);
@@ -257,6 +267,18 @@ public class UnitController : MonoBehaviour
         currentTargetUnit = null;
         lastTargetResourceUnit = null;
         setOrder(Order.Stop);
+    }
+
+    public void SetRallyPoint(UnitController unit)
+    {
+        rallyPointPosition = Vector3.zero;
+        rallyPointUnit = unit;
+    }
+
+    public void SetRallyPoint(Vector3 point)
+    {
+        rallyPointUnit = null;
+        rallyPointPosition = point;
     }
 
     public void SetSelected(bool isSelected)
@@ -286,7 +308,7 @@ public class UnitController : MonoBehaviour
         if (hp <= 0)
             Die();
 
-        if (damagingUnit != null && stats.canAttack) 
+        if (damagingUnit != null && type.canAttack) 
             SetTargetUnit(damagingUnit);
     }
 
@@ -301,13 +323,13 @@ public class UnitController : MonoBehaviour
 
     public void HarvestTargetUnit()
     {
-        if (!currentTargetUnit || !stats.canHarvest || !currentTargetUnit.stats.isResourceNode)
+        if (!currentTargetUnit || !type.canHarvest || !currentTargetUnit.type.isResourceNode)
             return;
 
         if (harvestCooldown > 0)
             return;
 
-        if (DistanceToUnitBounds(currentTargetUnit) > stats.harvestRange)
+        if (DistanceToUnitBounds(currentTargetUnit) > type.harvestRange)
         {
             mineParticleSystem.Stop();
             MoveTorwardsTargetUnit();
@@ -329,12 +351,16 @@ public class UnitController : MonoBehaviour
             return;
         }
 
+        if (navAgent.remainingDistance > type.harvestRange)
+            return;
+
         StopMovingTorwardsTarget();
+
         mineParticleSystem.Play();
         currentTargetUnit.currentTargetUnit = this;
-        harvestCooldown += stats.harvestSpeed;
+        harvestCooldown += type.harvestSpeed;
         lastTargetResourceUnit = currentTargetUnit;
-        currentTargetUnit.ExtractResources(stats.harvestAmount, this);
+        currentTargetUnit.ExtractResources(type.harvestAmount, this);
     }
 
     public void ReturnResourcesToDepotUnit()
@@ -342,7 +368,7 @@ public class UnitController : MonoBehaviour
         if (!currentTargetUnit)
             return;
 
-        if (DistanceToUnit(currentTargetUnit) > stats.harvestRange + currentTargetUnit.collisionSize * .6f)
+        if (DistanceToUnit(currentTargetUnit) > type.harvestRange + currentTargetUnit.collisionSize * .6f)
         {
             MoveTorwardsTargetUnit();
             return;
@@ -359,30 +385,30 @@ public class UnitController : MonoBehaviour
 
     public void AttackTargetUnit()
     {
-        if (!currentTargetUnit || !stats.canAttack)
+        if (!currentTargetUnit || !type.canAttack)
             return;
 
         if (attackCooldown > 0)
             return;
 
-        if (DistanceToUnit(currentTargetUnit) > stats.attackRange + currentTargetUnit.collisionSize * .6f)
+        if (DistanceToUnit(currentTargetUnit) > type.attackRange + currentTargetUnit.collisionSize * .6f)
         {
             MoveTorwardsTargetUnit();
             return;
         }
 
         StopMovingTorwardsTarget();
-        attackCooldown += stats.attackSpeed;
+        attackCooldown += type.attackSpeed;
         fireParticleSystem.Play();
-        currentTargetUnit.Damage(stats.attackDamage, this);
+        currentTargetUnit.Damage(type.attackDamage, this);
     }
 
-    public void TrainUnit(UnitType unitStats)
+    public void TrainUnit(UnitType unitType)
     {
         if (this.productionQueue.Count == 0)
-            this.remainingProductionTime = unitStats.productionTime;
+            this.remainingProductionTime = unitType.productionTime;
 
-        this.productionQueue.Add(unitStats);
+        this.productionQueue.Add(unitType);
     }
 
     public void HandleUnitTraining()
@@ -406,18 +432,27 @@ public class UnitController : MonoBehaviour
         }
     }
 
-    public void CreateUnit(UnitType unitStats)
+    public void CreateUnit(UnitType unitType)
     {
         Vector3 position = transform.position;
         position.x += collisionSize;
         GameObject unitObject = Instantiate(Resources.Load<GameObject>("UnitPrefab"), position, Quaternion.identity);
         UnitController unit = unitObject.GetComponent<UnitController>();
-        unit.stats = unitStats;
+        unit.type = unitType;
         unit.playerID = playerID;
-        if (unit.stats.canHarvest)
+        if (rallyPointUnit != null)
         {
-            unit.SetTargetUnit(unit.FindClosestFreeResource(), Order.Harvest);
+            unit.SetTargetUnit(rallyPointUnit);
+        } else if (rallyPointPosition != Vector3.zero)
+        {
+            unit.SetTargetPosition(rallyPointPosition);
+        } else
+        {
+            unit.SetTargetPosition(position + new Vector3(0.1f, 0, 0.1f));
+            Invoke("Stop", .5f);
         }
+
+
     }
 
     // TODO Break out to separate global helper class?
@@ -427,7 +462,7 @@ public class UnitController : MonoBehaviour
         UnitController resourceDepotTargetUnit = null;
         foreach (UnitController resourceDepotUnit in FindObjectsOfType<UnitController>())
         {
-            if (resourceDepotUnit.playerID == playerID && resourceDepotUnit.stats.isResourceDepot)
+            if (resourceDepotUnit.playerID == playerID && resourceDepotUnit.type.isResourceDepot)
             {
                 float distance = DistanceToUnit(resourceDepotUnit);
                 if (distance < shortestDistance)
@@ -456,10 +491,10 @@ public class UnitController : MonoBehaviour
         UnitController resourceTargetUnit = null;
         foreach (UnitController resourceUnit in FindObjectsOfType<UnitController>())
         {
-            if (resourceUnit.isNeutral && resourceUnit.stats.isResourceNode && !resourceUnit.isResourceBusy)
+            if (resourceUnit.isNeutral && resourceUnit.type.isResourceNode && !resourceUnit.isResourceBusy)
             {
                 float distance = DistanceToUnit(resourceUnit);
-                if (distance <= stats.harvestSeekRange && distance < shortestDistance)
+                if (distance <= type.harvestSeekRange && distance < shortestDistance)
                 {
                     shortestDistance = distance;
                     resourceTargetUnit = resourceUnit;
@@ -478,7 +513,7 @@ public class UnitController : MonoBehaviour
             if (IsEnemy(enemyUnit))
             {
                 float distance = DistanceToUnit(enemyUnit);
-                if (distance < stats.attackAggroRange && distance < shortestDistance)
+                if (distance < type.attackAggroRange && distance < shortestDistance)
                 {
                     shortestDistance = distance;
                     enemyTargetUnit = enemyUnit;
@@ -487,8 +522,6 @@ public class UnitController : MonoBehaviour
         }
         return enemyTargetUnit;
     }
-
- 
 
     void OnDrawGizmos()
     {

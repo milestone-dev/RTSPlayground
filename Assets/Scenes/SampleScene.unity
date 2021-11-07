@@ -108,7 +108,7 @@ NavMeshSettings:
     agentTypeID: 0
     agentRadius: 0.5
     agentHeight: 2
-    agentSlope: 37.7
+    agentSlope: 27
     agentClimb: 0.4
     ledgeDropHeight: 0
     maxJumpAcrossDistance: 0
@@ -122,7 +122,7 @@ NavMeshSettings:
     preserveTilesOutsideBounds: 0
     debug:
       m_Flags: 0
-  m_NavMeshData: {fileID: 23800000, guid: 44e1f83147dc041bda1c557d428ec27b, type: 2}
+  m_NavMeshData: {fileID: 23800000, guid: 27dac6813f32b4ea0a02486fb615973a, type: 2}
 --- !u!1001 &129973034
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -130,6 +130,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 763978520}
     m_Modifications:
+    - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
+      propertyPath: type
+      value: 
+      objectReference: {fileID: 11400000, guid: 609cd94e98d8f4429a2e2c3af62232ff, type: 2}
     - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
       propertyPath: stats
       value: 
@@ -295,6 +299,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 763978520}
     m_Modifications:
     - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
+      propertyPath: type
+      value: 
+      objectReference: {fileID: 11400000, guid: b5490506eabcf4c409c51f9cdcb8ccc0, type: 2}
+    - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
       propertyPath: stats
       value: 
       objectReference: {fileID: 11400000, guid: b5490506eabcf4c409c51f9cdcb8ccc0, type: 2}
@@ -410,6 +418,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 763978520}
     m_Modifications:
     - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
+      propertyPath: type
+      value: 
+      objectReference: {fileID: 11400000, guid: 609cd94e98d8f4429a2e2c3af62232ff, type: 2}
+    - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
       propertyPath: stats
       value: 
       objectReference: {fileID: 11400000, guid: 609cd94e98d8f4429a2e2c3af62232ff, type: 2}
@@ -476,6 +488,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 763978520}
     m_Modifications:
     - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
+      propertyPath: type
+      value: 
+      objectReference: {fileID: 11400000, guid: 609cd94e98d8f4429a2e2c3af62232ff, type: 2}
+    - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
       propertyPath: stats
       value: 
       objectReference: {fileID: 11400000, guid: 609cd94e98d8f4429a2e2c3af62232ff, type: 2}
@@ -541,6 +557,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 763978520}
     m_Modifications:
+    - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
+      propertyPath: type
+      value: 
+      objectReference: {fileID: 11400000, guid: 609cd94e98d8f4429a2e2c3af62232ff, type: 2}
     - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
       propertyPath: stats
       value: 
@@ -5421,6 +5441,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 763978520}
     m_Modifications:
     - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
+      propertyPath: type
+      value: 
+      objectReference: {fileID: 11400000, guid: 609cd94e98d8f4429a2e2c3af62232ff, type: 2}
+    - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
       propertyPath: stats
       value: 
       objectReference: {fileID: 11400000, guid: 609cd94e98d8f4429a2e2c3af62232ff, type: 2}
@@ -5487,6 +5511,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 763978520}
     m_Modifications:
     - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
+      propertyPath: type
+      value: 
+      objectReference: {fileID: 11400000, guid: 609cd94e98d8f4429a2e2c3af62232ff, type: 2}
+    - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
       propertyPath: stats
       value: 
       objectReference: {fileID: 11400000, guid: 609cd94e98d8f4429a2e2c3af62232ff, type: 2}
@@ -5547,6 +5575,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 763978520}
     m_Modifications:
+    - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
+      propertyPath: type
+      value: 
+      objectReference: {fileID: 11400000, guid: 609cd94e98d8f4429a2e2c3af62232ff, type: 2}
     - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
       propertyPath: stats
       value: 
@@ -5619,6 +5651,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 763978520}
     m_Modifications:
     - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
+      propertyPath: type
+      value: 
+      objectReference: {fileID: 11400000, guid: b5490506eabcf4c409c51f9cdcb8ccc0, type: 2}
+    - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
       propertyPath: stats
       value: 
       objectReference: {fileID: 11400000, guid: b5490506eabcf4c409c51f9cdcb8ccc0, type: 2}
@@ -5683,6 +5719,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 763978520}
     m_Modifications:
+    - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
+      propertyPath: type
+      value: 
+      objectReference: {fileID: 11400000, guid: 14a8b3d882e3f4abeaf49c3ffd5fd9de, type: 2}
     - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
       propertyPath: stats
       value: 
@@ -5940,6 +5980,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 763978520}
     m_Modifications:
     - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
+      propertyPath: type
+      value: 
+      objectReference: {fileID: 11400000, guid: 609cd94e98d8f4429a2e2c3af62232ff, type: 2}
+    - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
       propertyPath: stats
       value: 
       objectReference: {fileID: 11400000, guid: 609cd94e98d8f4429a2e2c3af62232ff, type: 2}
@@ -6005,6 +6049,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 763978520}
     m_Modifications:
+    - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
+      propertyPath: type
+      value: 
+      objectReference: {fileID: 11400000, guid: b5490506eabcf4c409c51f9cdcb8ccc0, type: 2}
     - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
       propertyPath: stats
       value: 
@@ -6147,6 +6195,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 763978520}
     m_Modifications:
     - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
+      propertyPath: type
+      value: 
+      objectReference: {fileID: 11400000, guid: 609cd94e98d8f4429a2e2c3af62232ff, type: 2}
+    - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
       propertyPath: stats
       value: 
       objectReference: {fileID: 11400000, guid: 609cd94e98d8f4429a2e2c3af62232ff, type: 2}
@@ -6213,6 +6265,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 763978520}
     m_Modifications:
     - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
+      propertyPath: type
+      value: 
+      objectReference: {fileID: 11400000, guid: 609cd94e98d8f4429a2e2c3af62232ff, type: 2}
+    - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
       propertyPath: stats
       value: 
       objectReference: {fileID: 11400000, guid: 609cd94e98d8f4429a2e2c3af62232ff, type: 2}
@@ -6278,6 +6334,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 763978520}
     m_Modifications:
+    - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
+      propertyPath: type
+      value: 
+      objectReference: {fileID: 11400000, guid: 14a8b3d882e3f4abeaf49c3ffd5fd9de, type: 2}
     - target: {fileID: 8337176000212573042, guid: 77d4170567b6c48a2896e8b6a28928e5, type: 3}
       propertyPath: stats
       value: 

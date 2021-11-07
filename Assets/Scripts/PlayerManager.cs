@@ -42,16 +42,25 @@ public class PlayerManager : MonoBehaviour
             // Unit info
             UnitController firstSelectedUnit = selectedUnits[0];
             var unitInfoData = new Dictionary<object, object>();
-            unitInfoData.Add(firstSelectedUnit.stats.unitName, null);
+            unitInfoData.Add(firstSelectedUnit.type.unitName, null);
             unitInfoData.Add("Player", firstSelectedUnit.playerID);
             unitInfoData.Add("HP", firstSelectedUnit.hp);
             unitInfoData.Add("Order", firstSelectedUnit.currentOrder);
-            if (firstSelectedUnit.stats.canHarvest)
+            if (firstSelectedUnit.type.canHarvest)
                 unitInfoData.Add("Carrying Resources", firstSelectedUnit.harvestResourceCarryAmount);
-            if (firstSelectedUnit.stats.isResourceNode)
+            if (firstSelectedUnit.type.isResourceNode)
                 unitInfoData.Add("Resources", firstSelectedUnit.resourcesLeft);
             if (firstSelectedUnit.currentTargetUnit)
-                unitInfoData.Add("Target Unit", $"{firstSelectedUnit.currentTargetUnit.stats.unitName} ({firstSelectedUnit.currentTargetUnit})");
+                unitInfoData.Add("Target Unit", $"{firstSelectedUnit.currentTargetUnit.type.unitName} ({firstSelectedUnit.currentTargetUnit})");
+
+            if (firstSelectedUnit.isBuilding)
+            {
+                if (firstSelectedUnit.rallyPointPosition != Vector3.zero)
+                    unitInfoData.Add("Rally Point Position", firstSelectedUnit.rallyPointPosition);
+
+                if (firstSelectedUnit.rallyPointUnit != null)
+                    unitInfoData.Add("Rally Point Unit", firstSelectedUnit.rallyPointUnit);
+            }
 
             if (firstSelectedUnit.isUnitTrainer)
             {
@@ -91,17 +100,17 @@ public class PlayerManager : MonoBehaviour
             float buttonX = 0;
             float buttonY = 0;
             GUI.skin.button.fontSize = 10;
-            for (var i = 0; i < firstSelectedUnit.stats.trainableUnits.Count; i++)
+            for (var i = 0; i < firstSelectedUnit.type.trainableUnits.Count; i++)
             {
-                UnitType trainableUnitStats = firstSelectedUnit.stats.trainableUnits[i];
+                UnitType trainableUnitType = firstSelectedUnit.type.trainableUnits[i];
                 if (GUI.Button(
                     new Rect(gridX + buttonX, gridY + buttonY, buttonWidth, buttonWidth),
-                    new GUIContent(trainableUnitStats.name, trainableUnitStats.GetTooltipText()))
+                    new GUIContent(trainableUnitType.name, trainableUnitType.GetTooltipText()))
                 ) {
-                    if (playerResources >= trainableUnitStats.productionCost)
+                    if (playerResources >= trainableUnitType.productionCost)
                     {
-                        firstSelectedUnit.TrainUnit(trainableUnitStats);
-                        playerResources -= trainableUnitStats.productionCost;
+                        firstSelectedUnit.TrainUnit(trainableUnitType);
+                        playerResources -= trainableUnitType.productionCost;
                     }
                 }
 
@@ -181,7 +190,7 @@ public class PlayerManager : MonoBehaviour
                 }
                 foreach (UnitController unit in FindObjectsOfType<UnitController>())
                 {
-                    if (unit.playerID == humanPlayerID && unit.stats.unitClass == UnitClass.Unit && IsUnitWithinSelectionBounds(unit.transform))
+                    if (unit.playerID == humanPlayerID && unit.type.unitClass == UnitClass.Unit && IsUnitWithinSelectionBounds(unit.transform))
                     {
                         SelectUnit(unit, true);
                     }
@@ -200,9 +209,17 @@ public class PlayerManager : MonoBehaviour
                     {
                         if (unit.playerID == humanPlayerID)
                         {
-                            unit.SetTargetDestination(hit.point);
-                            targetEmitter.transform.position = hit.point + new Vector3(0, 0.5f, 0);
-                            targetEmitter.Play();
+                            if (unit.isUnit)
+                            {
+                                unit.SetTargetPosition(hit.point);
+                                targetEmitter.transform.position = hit.point + new Vector3(0, 0.5f, 0);
+                                targetEmitter.Play();
+                            } else if (unit.isBuilding)
+                            {
+                                unit.SetRallyPoint(hit.point);
+                                targetEmitter.transform.position = hit.point + new Vector3(0, 0.5f, 0);
+                                targetEmitter.Play();
+                            }
                         }
                     }
                 } else if (hit.transform.CompareTag("Unit")) {
@@ -211,8 +228,15 @@ public class PlayerManager : MonoBehaviour
                     {
                         if (unit.playerID == humanPlayerID)
                         {
-                            unit.SetTargetUnit(targetUnit);
-                            targetUnit.FlashSelectionRing();
+                            if (unit.isUnit)
+                            {
+                                unit.SetTargetUnit(targetUnit);
+                                targetUnit.FlashSelectionRing();
+                            } else if (unit.isBuilding)
+                            {
+                                unit.SetRallyPoint(targetUnit);
+                                targetUnit.FlashSelectionRing();
+                            }
                         }
                     }
                 }
