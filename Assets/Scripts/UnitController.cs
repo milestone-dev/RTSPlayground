@@ -10,6 +10,7 @@ public enum Order
     Follow,
     Guard,
     Attack,
+    AttackMove,
     Harvest,
     ReturnResources,
     Die,
@@ -17,8 +18,8 @@ public enum Order
 
 public class UnitController : MonoBehaviour
 {
-    private NavMeshAgent navAgent;
-    private NavMeshObstacle navObstacle;
+    public NavMeshAgent navAgent;
+    public NavMeshObstacle navObstacle;
     private ParticleSystem fireParticleSystem;
     private ParticleSystem mineParticleSystem;
     private GameObject highlightCircle;
@@ -41,6 +42,7 @@ public class UnitController : MonoBehaviour
     public List<UnitType> productionQueue = new List<UnitType>();
     public float remainingProductionTime;
 
+    public bool isOwnedByHumanPlayer  { get { return playerID == PlayerManager.instance.humanPlayerID; } }
     public bool isNeutral  { get { return playerID == 0; } }
     public bool isResourceBusy  { get { return currentTargetUnit != null; } }
     public bool isUnitTrainer { get { return type.trainableUnits.Count != 0; } }
@@ -136,13 +138,13 @@ public class UnitController : MonoBehaviour
         if (navAgent && currentTargetPosition != Vector3.zero && navAgent.destination != currentTargetPosition)
             navAgent.destination = currentTargetPosition;
 
-        if (currentOrder == Order.Move && navAgent && navAgent.destination == transform.position)
+        if ((currentOrder == Order.Move || currentOrder == Order.AttackMove) && navAgent && navAgent.destination == transform.position)
             Stop();
 
         if (currentOrder == Order.Stop && type.canAttack)
             setOrder(Order.Guard);
 
-        if (currentOrder == Order.Guard)
+        if (currentOrder == Order.Guard || currentOrder == Order.AttackMove)
         {
             UnitController enemyUnit = FindEnemyUnitInRange();
             if (enemyUnit)
@@ -236,15 +238,19 @@ public class UnitController : MonoBehaviour
 
     public void SetTargetPosition(Vector3 position)
     {
+        SetTargetPosition(position, Order.Move);
+    }
+
+    public void SetTargetPosition(Vector3 position, Order order)
+    {
         currentTargetPosition = position;
-        setOrder(Order.Move);
         currentTargetUnit = null;
+        setOrder(order);
     }
 
     public void SetTargetUnit(UnitController targetUnit)
     {
         currentTargetUnit = targetUnit;
-
 
         if (type.canAttack && IsEnemy(currentTargetUnit) && !currentTargetUnit.isNeutral)
             setOrder(Order.Attack);
@@ -351,10 +357,15 @@ public class UnitController : MonoBehaviour
             return;
         }
 
-        if (navAgent.remainingDistance > type.harvestRange)
-            return;
+        if (123 == 123)
+        {
+            Debug.Log("");
+        }
 
         StopMovingTorwardsTarget();
+
+        if (navAgent.velocity != Vector3.zero)
+            return;
 
         mineParticleSystem.Play();
         currentTargetUnit.currentTargetUnit = this;
@@ -368,13 +379,14 @@ public class UnitController : MonoBehaviour
         if (!currentTargetUnit)
             return;
 
-        if (DistanceToUnit(currentTargetUnit) > type.harvestRange + currentTargetUnit.collisionSize * .6f)
+        if (DistanceToUnitBounds(currentTargetUnit) > type.harvestRange)
         {
             MoveTorwardsTargetUnit();
             return;
         }
 
         StopMovingTorwardsTarget();
+
         PlayerManager.instance.playerResources += harvestResourceCarryAmount;
         harvestResourceCarryAmount = 0;
         if (lastTargetResourceUnit)
@@ -391,7 +403,7 @@ public class UnitController : MonoBehaviour
         if (attackCooldown > 0)
             return;
 
-        if (DistanceToUnit(currentTargetUnit) > type.attackRange + currentTargetUnit.collisionSize * .6f)
+        if (DistanceToUnitBounds(currentTargetUnit) > type.attackRange)
         {
             MoveTorwardsTargetUnit();
             return;

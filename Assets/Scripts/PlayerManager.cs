@@ -66,8 +66,17 @@ public class PlayerManager : MonoBehaviour
             {
                 unitInfoData.Add("Training Queue", firstSelectedUnit.productionQueue.Count);
             }
+
+            if (firstSelectedUnit.navAgent)
+            {
+                unitInfoData.Add("Destination", firstSelectedUnit.navAgent.destination);
+                unitInfoData.Add("Velocity", firstSelectedUnit.navAgent.velocity);
+                unitInfoData.Add("Remaining distance", firstSelectedUnit.navAgent.remainingDistance);
+                unitInfoData.Add("Stopped", firstSelectedUnit.navAgent.isStopped);
+            }
+
             string infoText = "";
-            const float rowHeight = 18;
+            const float rowHeight = 16;
             float labelHeight = rowHeight * unitInfoData.Count;
 
             foreach (string key in unitInfoData.Keys)
@@ -75,6 +84,7 @@ public class PlayerManager : MonoBehaviour
                 infoText += string.Format("{0}: {1}\n", key, unitInfoData[key]);
             }
 
+            GUI.skin.label.fontSize = 12;
             GUI.Label(new Rect(padding, padding, 600, labelHeight), infoText);
 
             // Progress bar
@@ -211,7 +221,13 @@ public class PlayerManager : MonoBehaviour
                         {
                             if (unit.isUnit)
                             {
-                                unit.SetTargetPosition(hit.point);
+                                if (Input.GetKey(KeyCode.LeftControl))
+                                {
+                                    unit.SetTargetPosition(hit.point, Order.AttackMove);
+                                } else
+                                {
+                                    unit.SetTargetPosition(hit.point);
+                                }
                                 targetEmitter.transform.position = hit.point + new Vector3(0, 0.5f, 0);
                                 targetEmitter.Play();
                             } else if (unit.isBuilding)
