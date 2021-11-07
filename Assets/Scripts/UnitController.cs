@@ -112,6 +112,7 @@ public class UnitController : MonoBehaviour
         // Set up variables
         hp = type.maxHP;
         resourcesLeft = type.resourcesProvided;
+        harvestCooldown = type.harvestSpeed;
     }
 
     private void setOrder(Order order)
@@ -123,9 +124,6 @@ public class UnitController : MonoBehaviour
     {
         if (attackCooldown > 0)
             attackCooldown = Mathf.Max(0, attackCooldown - Time.deltaTime);
-
-        if (harvestCooldown > 0)
-            harvestCooldown = Mathf.Max(0, harvestCooldown - Time.deltaTime);
 
         if (currentTargetUnit == null && currentOrder == Order.Attack)
             setOrder(Order.Stop);
@@ -339,9 +337,6 @@ public class UnitController : MonoBehaviour
         if (!currentTargetUnit || !type.canHarvest || !currentTargetUnit.type.isResourceNode)
             return;
 
-        if (harvestCooldown > 0)
-            return;
-
         if (DistanceToUnitBounds(currentTargetUnit) > type.harvestRange)
         {
             mineParticleSystem.Stop();
@@ -369,10 +364,18 @@ public class UnitController : MonoBehaviour
         if (navAgent.velocity != Vector3.zero)
             return;
 
+
         mineParticleSystem.Play();
         currentTargetUnit.currentTargetUnit = this;
-        harvestCooldown += type.harvestSpeed;
         lastTargetResourceUnit = currentTargetUnit;
+
+        if (harvestCooldown > 0)
+        {
+            harvestCooldown = Mathf.Max(0, harvestCooldown - Time.deltaTime);
+            return;
+        }
+
+        harvestCooldown += type.harvestSpeed;
         currentTargetUnit.ExtractResources(type.harvestAmount, this);
     }
 

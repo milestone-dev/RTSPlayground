@@ -36,7 +36,7 @@ MonoBehaviour:
   harvestSeekRange: 20
   harvestRange: 1
   harvestSpeed: 2
-  harvestAmount: 1
+  harvestAmount: 4
   harvestResourceCarryMax: 8
   resourcesProvided: 0
   trainableUnits: []
