@@ -7,11 +7,14 @@ public class PlayerManager : MonoBehaviour
     RaycastHit hit;
     List<UnitController> selectedUnits = new List<UnitController>();
     bool isDragging;
-    bool isPlacingStructre;
     Vector3 mousePosition;
     public int humanPlayerID;
     public float playerResources;
     private ParticleSystem targetEmitter;
+
+
+    private PlacementGhostController placementGhost;
+    private bool isPlacingUnit { get { return placementGhost != null; } }
 
     public static PlayerManager instance;
 
@@ -20,6 +23,15 @@ public class PlayerManager : MonoBehaviour
         instance = this;
         targetEmitter = transform.Find("TargetEmitter").GetComponent<ParticleSystem>();
         playerResources = 100;
+
+        //Simulation
+        CreatePlacementGhost(Resources.Load<UnitType>("UnitTypes/TownHall"));
+    }
+
+    private void CreatePlacementGhost(UnitType unitType)
+    {
+        placementGhost = Instantiate(Resources.Load<GameObject>("Prefabs/PlacementGhost"), Vector3.zero, Quaternion.identity).GetComponent<PlacementGhostController>();
+        placementGhost.setUnitType(unitType);
     }
 
     private void OnGUI()
@@ -169,96 +181,124 @@ public class PlayerManager : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (isPlacingUnit)
         {
-            mousePosition = Input.mousePosition;
-            isDragging = true;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out hit) && hit.transform.CompareTag("Unit"))
+            if (Physics.Raycast(ray, out hit))
             {
-                UnitController unit = hit.transform.gameObject.GetComponent<UnitController>();
-                if (!selectedUnits.Contains(unit))
+                Vector3 point = hit.point;
+                placementGhost.gameObject.transform.position = point;
+                placementGhost.UpdatePlacement();
+                if(placementGhost.isPlacementValid)
                 {
-                    SelectUnit(unit, Input.GetKey(KeyCode.LeftShift));
-                }
-                else
-                {
-                    if (Input.GetKey(KeyCode.LeftShift))
+                    if (Input.GetMouseButtonDown(0))
                     {
-                        DeselectUnit(unit);
+                        UnitController.CreateUnit(placementGhost.unitType, point, null);
+                        DestroyImmediate(placementGhost);
+                        placementGhost = null;
                     }
                 }
             }
-        }
-
-        if (isDragging && Input.GetMouseButtonUp(0))
-        {
-            if (Vector3.Distance(mousePosition, Input.mousePosition) > 32)
+            if (Input.GetMouseButtonDown(1))
             {
-                if (!Input.GetKey(KeyCode.LeftShift))
-                {
-                    DeselectAllUnits();
-                }
-                foreach (UnitController unit in FindObjectsOfType<UnitController>())
-                {
-                    if (unit.playerID == humanPlayerID && unit.type.unitClass == UnitClass.Unit && IsUnitWithinSelectionBounds(unit.transform))
-                    {
-                        SelectUnit(unit, true);
-                    }
-                }
+                DestroyImmediate(placementGhost);
+                placementGhost = null;
             }
-            isDragging = false;
-        }
-
-        if (Input.GetMouseButtonDown(1) && selectedUnits.Count > 0)
+        } else
         {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out hit)) {
-                if (hit.transform.CompareTag("Ground"))
+            if (Input.GetMouseButtonDown(0))
+            {
+                mousePosition = Input.mousePosition;
+                isDragging = true;
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                if (Physics.Raycast(ray, out hit) && hit.transform.CompareTag("Unit"))
                 {
-                    foreach (UnitController unit in selectedUnits)
+                    UnitController unit = hit.transform.gameObject.GetComponent<UnitController>();
+                    if (!selectedUnits.Contains(unit))
                     {
-                        if (unit.playerID == humanPlayerID)
+                        SelectUnit(unit, Input.GetKey(KeyCode.LeftShift));
+                    }
+                    else
+                    {
+                        if (Input.GetKey(KeyCode.LeftShift))
                         {
-                            if (unit.isUnit)
+                            DeselectUnit(unit);
+                        }
+                    }
+                }
+            }
+
+            if (isDragging && Input.GetMouseButtonUp(0))
+            {
+                if (Vector3.Distance(mousePosition, Input.mousePosition) > 32)
+                {
+                    if (!Input.GetKey(KeyCode.LeftShift))
+                    {
+                        DeselectAllUnits();
+                    }
+                    foreach (UnitController unit in FindObjectsOfType<UnitController>())
+                    {
+                        if (unit.playerID == humanPlayerID && unit.type.unitClass == UnitClass.Unit && IsUnitWithinSelectionBounds(unit.transform))
+                        {
+                            SelectUnit(unit, true);
+                        }
+                    }
+                }
+                isDragging = false;
+            }
+
+            if (Input.GetMouseButtonDown(1) && selectedUnits.Count > 0)
+            {
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                if (Physics.Raycast(ray, out hit)) {
+                    if (hit.transform.CompareTag("Ground"))
+                    {
+                        foreach (UnitController unit in selectedUnits)
+                        {
+                            if (unit.playerID == humanPlayerID)
                             {
-                                if (Input.GetKey(KeyCode.LeftControl))
+                                if (unit.isUnit)
                                 {
-                                    unit.SetTargetPosition(hit.point, Order.AttackMove);
-                                } else
+                                    if (Input.GetKey(KeyCode.LeftControl))
+                                    {
+                                        unit.SetTargetPosition(hit.point, Order.AttackMove);
+                                    } else
+                                    {
+                                        unit.SetTargetPosition(hit.point);
+                                    }
+                                    targetEmitter.transform.position = hit.point + new Vector3(0, 0.5f, 0);
+                                    targetEmitter.Play();
+                                } else if (unit.isBuilding)
                                 {
-                                    unit.SetTargetPosition(hit.point);
+                                    unit.SetRallyPoint(hit.point);
+                                    targetEmitter.transform.position = hit.point + new Vector3(0, 0.5f, 0);
+                                    targetEmitter.Play();
                                 }
-                                targetEmitter.transform.position = hit.point + new Vector3(0, 0.5f, 0);
-                                targetEmitter.Play();
-                            } else if (unit.isBuilding)
-                            {
-                                unit.SetRallyPoint(hit.point);
-                                targetEmitter.transform.position = hit.point + new Vector3(0, 0.5f, 0);
-                                targetEmitter.Play();
                             }
                         }
-                    }
-                } else if (hit.transform.CompareTag("Unit")) {
-                    UnitController targetUnit = hit.transform.gameObject.GetComponent<UnitController>();
-                    foreach (UnitController unit in selectedUnits)
-                    {
-                        if (unit.playerID == humanPlayerID)
+                    } else if (hit.transform.CompareTag("Unit")) {
+                        UnitController targetUnit = hit.transform.gameObject.GetComponent<UnitController>();
+                        foreach (UnitController unit in selectedUnits)
                         {
-                            if (unit.isUnit)
+                            if (unit.playerID == humanPlayerID)
                             {
-                                unit.SetTargetUnit(targetUnit);
-                                targetUnit.FlashSelectionRing();
-                            } else if (unit.isBuilding)
-                            {
-                                unit.SetRallyPoint(targetUnit);
-                                targetUnit.FlashSelectionRing();
+                                if (unit.isUnit)
+                                {
+                                    unit.SetTargetUnit(targetUnit);
+                                    targetUnit.FlashSelectionRing();
+                                } else if (unit.isBuilding)
+                                {
+                                    unit.SetRallyPoint(targetUnit);
+                                    targetUnit.FlashSelectionRing();
+                                }
                             }
                         }
                     }
                 }
             }
+
         }
+
     }
 
     private bool IsUnitWithinSelectionBounds(Transform unit)

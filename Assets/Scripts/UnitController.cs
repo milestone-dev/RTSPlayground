@@ -65,17 +65,26 @@ public class UnitController : MonoBehaviour
 
     private void Start()
     {
-        if (!type) {
-            Debug.Log($"{this} is missing UnitType data");
-            Die();
-        }
-
-        name = type.name;
-
         fireParticleSystem = transform.Find("FireParticleSystem").GetComponent<ParticleSystem>();
         mineParticleSystem = transform.Find("MineParticleSystem").GetComponent<ParticleSystem>();
         highlightCircle = transform.Find("Highlight").gameObject;
         mineralsObject = transform.Find("Minerals").gameObject;
+
+        if (type)
+            SetType(type);
+    }
+
+    public void SetType(UnitType unitType)
+    {
+        if (!unitType)
+        {
+            Debug.Log($"{this} is missing UnitType data");
+            Die();
+            return;
+        }
+
+        type = unitType;
+        name = type.name;
 
         if (isUnit)
         {
@@ -92,7 +101,7 @@ public class UnitController : MonoBehaviour
 
         if (type.prefabModel)
         {
-            GameObject model =  Instantiate(type.prefabModel, Vector3.zero, Quaternion.identity);
+            GameObject model = Instantiate(type.prefabModel, Vector3.zero, Quaternion.identity);
             model.transform.parent = gameObject.transform;
             Vector3 modelSize = model.GetComponent<Renderer>().bounds.size;
             model.transform.localPosition = new Vector3(0, -0.5f, 0);
@@ -105,7 +114,7 @@ public class UnitController : MonoBehaviour
 
             collisionSize = Mathf.Max(modelSize.x, modelSize.z);
             float circleScaleMultiplier = 0.65f;
-            Vector3 circleScale = new Vector3(circleScaleMultiplier * collisionSize, circleScaleMultiplier  * collisionSize, circleScaleMultiplier  * collisionSize);
+            Vector3 circleScale = new Vector3(circleScaleMultiplier * collisionSize, circleScaleMultiplier * collisionSize, circleScaleMultiplier * collisionSize);
             highlightCircle.transform.localScale = circleScale;
         }
 
@@ -122,6 +131,9 @@ public class UnitController : MonoBehaviour
 
     private void Update() 
     {
+        if (!type)
+            return;
+
         if (attackCooldown > 0)
             attackCooldown = Mathf.Max(0, attackCooldown - Time.deltaTime);
 
@@ -437,7 +449,9 @@ public class UnitController : MonoBehaviour
         if (this.remainingProductionTime <= 0)
         {
             // Create the unit and remove it from the queue
-            CreateUnit(firstUnitType);
+            Vector3 position = transform.position;
+            position.x += collisionSize;
+            UnitController.CreateUnit(firstUnitType, position,  this);
             this.productionQueue.RemoveAt(0);
 
             // Queue up the next unit
@@ -449,27 +463,27 @@ public class UnitController : MonoBehaviour
         }
     }
 
-    public void CreateUnit(UnitType unitType)
+    public static UnitController CreateUnit(UnitType unitType, Vector3 position, UnitController creatingUnit)
     {
-        Vector3 position = transform.position;
-        position.x += collisionSize;
-        GameObject unitObject = Instantiate(Resources.Load<GameObject>("UnitPrefab"), position, Quaternion.identity);
+        GameObject unitObject = Instantiate(Resources.Load<GameObject>("Prefabs/UnitPrefab"), position, Quaternion.identity);
         UnitController unit = unitObject.GetComponent<UnitController>();
-        unit.type = unitType;
-        unit.playerID = playerID;
-        if (rallyPointUnit != null)
+        unit.SetType(unitType);
+        unit.playerID = creatingUnit.playerID;
+        if (unit.type.unitClass == UnitClass.Unit)
         {
-            unit.SetTargetUnit(rallyPointUnit);
-        } else if (rallyPointPosition != Vector3.zero)
-        {
-            unit.SetTargetPosition(rallyPointPosition);
-        } else
-        {
-            unit.SetTargetPosition(position + new Vector3(0.1f, 0, 0.1f));
-            Invoke("Stop", .5f);
+            if (creatingUnit.rallyPointUnit != null)
+            {
+                unit.SetTargetUnit(creatingUnit.rallyPointUnit);
+            } else if (creatingUnit.rallyPointPosition != Vector3.zero)
+            {
+                unit.SetTargetPosition(creatingUnit.rallyPointPosition);
+            } else
+            {
+                unit.SetTargetPosition(position + new Vector3(0.1f, 0, 0.1f));
+                unit.Invoke("Stop", .5f);
+            }
         }
-
-
+        return unit;
     }
 
     // TODO Break out to separate global helper class?

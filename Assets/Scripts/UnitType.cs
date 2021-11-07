@@ -5,7 +5,8 @@ using UnityEngine;
 public enum UnitClass
 {
     Unit,
-    Building
+    Building,
+    PlacementGhost
 }
 
 [CreateAssetMenu(fileName = "Unit Stats", menuName = "Unit Stats")]
