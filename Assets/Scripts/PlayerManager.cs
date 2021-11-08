@@ -11,21 +11,27 @@ public class PlayerManager : MonoBehaviour
     public int humanPlayerID;
     public float playerResources;
     private ParticleSystem targetEmitter;
-
+    public Material[] playerMaterials = new Material[9];
 
     private PlacementGhostController placementGhost;
     private bool isPlacingUnit { get { return placementGhost != null; } }
 
     public static PlayerManager instance;
 
-    private void Start()
+    private void Awake()
     {
         instance = this;
-        targetEmitter = transform.Find("TargetEmitter").GetComponent<ParticleSystem>();
-        playerResources = 100;
+    }
 
-        //Simulation
-        CreatePlacementGhost(Resources.Load<UnitType>("UnitTypes/TownHall"));
+    private void Start()
+    {
+        targetEmitter = transform.Find("TargetEmitter").GetComponent<ParticleSystem>();
+        playerResources = 10000;
+    }
+
+    public Material getPlayerMaterial(int playerID)
+    {
+        return playerMaterials[playerID];
     }
 
     private void CreatePlacementGhost(UnitType unitType)
@@ -114,37 +120,60 @@ public class PlayerManager : MonoBehaviour
                 GUI.DrawTexture(new Rect(progressBoxX, progressBoxY, progressBoxWidth * progress, progressBoxHeight), Texture2D.whiteTexture);
             }
 
-            // Command card
-            const float buttonPadding = 4;
-            const float buttonWidth = 48;
-            const float gridWidth = 200;
-            const float gridY = padding;
-            float gridX = Screen.width - padding - gridWidth;
-            float buttonX = 0;
-            float buttonY = 0;
-            GUI.skin.button.fontSize = 10;
-            for (var i = 0; i < firstSelectedUnit.type.trainableUnits.Count; i++)
+            // Command card -- TODO make this into a generic thing instead
+            List<UnitType> unitTypes = null;
+            bool isTraining = true;
+            if (firstSelectedUnit.type.trainableUnits.Count != 0)
             {
-                UnitType trainableUnitType = firstSelectedUnit.type.trainableUnits[i];
-                if (GUI.Button(
-                    new Rect(gridX + buttonX, gridY + buttonY, buttonWidth, buttonWidth),
-                    new GUIContent(trainableUnitType.name, trainableUnitType.GetTooltipText()))
-                ) {
-                    if (playerResources >= trainableUnitType.productionCost)
-                    {
-                        firstSelectedUnit.TrainUnit(trainableUnitType);
-                        playerResources -= trainableUnitType.productionCost;
-                    }
-                }
+                unitTypes = firstSelectedUnit.type.trainableUnits;
+            } else if (firstSelectedUnit.type.constructableUnits.Count != 0)
+            {
+                unitTypes = firstSelectedUnit.type.constructableUnits;
+                isTraining = false;
+            }
 
-                if ((i + 1) % 3 == 0)
+            if (unitTypes != null)
+            {
+                const float buttonPadding = 4;
+                const float buttonWidth = 48;
+                const float gridWidth = 200;
+                const float gridY = padding;
+                float gridX = Screen.width - padding - gridWidth;
+                float buttonX = 0;
+                float buttonY = 0;
+                GUI.skin.button.fontSize = 10;
+                for (var i = 0; i < unitTypes.Count; i++)
                 {
-                    buttonX = 0;
-                    buttonY += buttonWidth + buttonPadding;
-                }
-                else
-                {
-                    buttonX += buttonWidth + buttonPadding;
+                    UnitType unitType = unitTypes[i];
+                    if (GUI.Button(
+                        new Rect(gridX + buttonX, gridY + buttonY, buttonWidth, buttonWidth),
+                        new GUIContent(unitType.name, unitType.GetTooltipText()))
+                    ) {
+                        if (isTraining)
+                        {
+                            if (playerResources >= unitType.productionCost)
+                            {
+                                firstSelectedUnit.TrainUnit(unitType);
+                                playerResources -= unitType.productionCost;
+                            }
+                        } else
+                        {
+                            if (playerResources >= unitType.productionCost)
+                            {
+                                CreatePlacementGhost(unitType);
+                            }
+                        }
+                    }
+
+                    if ((i + 1) % 3 == 0)
+                    {
+                        buttonX = 0;
+                        buttonY += buttonWidth + buttonPadding;
+                    }
+                    else
+                    {
+                        buttonX += buttonWidth + buttonPadding;
+                    }
                 }
             }
 
@@ -183,25 +212,29 @@ public class PlayerManager : MonoBehaviour
     {
         if (isPlacingUnit)
         {
+            isDragging = false;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out hit))
             {
                 Vector3 point = hit.point;
-                placementGhost.gameObject.transform.position = point;
+                placementGhost.SetPositionRoundedToGrid(point);
+                //placementGhost.gameObject.transform.position = point;
                 placementGhost.UpdatePlacement();
                 if(placementGhost.isPlacementValid)
                 {
                     if (Input.GetMouseButtonDown(0))
                     {
-                        UnitController.CreateUnit(placementGhost.unitType, point, null);
-                        DestroyImmediate(placementGhost);
+                        UnitController firstUnit = selectedUnits[0];
+                        firstUnit.constructionUnitType = placementGhost.unitType;
+                        firstUnit.SetTargetPosition(placementGhost.transform.position, Order.Construct);
+                        Object.Destroy(placementGhost.gameObject);
                         placementGhost = null;
                     }
                 }
             }
             if (Input.GetMouseButtonDown(1))
             {
-                DestroyImmediate(placementGhost);
+                Object.Destroy(placementGhost.gameObject);
                 placementGhost = null;
             }
         } else

@@ -13,6 +13,7 @@ public enum Order
     AttackMove,
     Harvest,
     ReturnResources,
+    Construct,
     Die,
 }
 
@@ -39,6 +40,8 @@ public class UnitController : MonoBehaviour
     public UnitController currentTargetUnit;
     public UnitController lastTargetResourceUnit;
     public float resourcesLeft;
+
+    public UnitType constructionUnitType;
 
     public List<UnitType> productionQueue = new List<UnitType>();
     public float remainingProductionTime;
@@ -70,20 +73,13 @@ public class UnitController : MonoBehaviour
         highlightCircle = transform.Find("Highlight").gameObject;
         mineralsObject = transform.Find("Minerals").gameObject;
 
-        if (type)
-            SetType(type);
-    }
-
-    public void SetType(UnitType unitType)
-    {
-        if (!unitType)
+        if (!type)
         {
             Debug.Log($"{this} is missing UnitType data");
             Die();
             return;
         }
 
-        type = unitType;
         name = type.name;
 
         if (isUnit)
@@ -103,7 +99,8 @@ public class UnitController : MonoBehaviour
         {
             GameObject model = Instantiate(type.prefabModel, Vector3.zero, Quaternion.identity);
             model.transform.parent = gameObject.transform;
-            Vector3 modelSize = model.GetComponent<Renderer>().bounds.size;
+            Renderer renderer = model.GetComponent<Renderer>();
+            Vector3 modelSize = renderer.bounds.size;
             model.transform.localPosition = new Vector3(0, -0.5f, 0);
 
             boxCollider = GetComponent<BoxCollider>();
@@ -116,6 +113,23 @@ public class UnitController : MonoBehaviour
             float circleScaleMultiplier = 0.65f;
             Vector3 circleScale = new Vector3(circleScaleMultiplier * collisionSize, circleScaleMultiplier * collisionSize, circleScaleMultiplier * collisionSize);
             highlightCircle.transform.localScale = circleScale;
+
+            // Player color
+            var modelMaterials = new Material[renderer.materials.Length];
+            for (var i = 0; i < modelMaterials.Length; i++)
+            {
+                Material m = renderer.materials[i];
+                Debug.Log($"{m.color}, {Color.cyan}");
+                if (m.color == Color.cyan)
+                {
+                    modelMaterials[i] = PlayerManager.instance.getPlayerMaterial(playerID);
+                } else
+                {
+                    modelMaterials[i] = renderer.materials[i];
+                }
+                
+            }
+            renderer.materials = modelMaterials;
         }
 
         // Set up variables
@@ -179,6 +193,9 @@ public class UnitController : MonoBehaviour
                 ClearTargetUnit();
             }
         }
+
+        if (currentOrder == Order.Construct)
+            ConstructIntendedUnit();
 
         // Acting on target unit orders
         if (currentTargetUnit != null)
@@ -440,6 +457,16 @@ public class UnitController : MonoBehaviour
         this.productionQueue.Add(unitType);
     }
 
+    public void ConstructIntendedUnit()
+    {
+        if (Vector3.Distance(transform.position, currentTargetPosition) > 1)
+            return;
+
+        UnitController.CreateUnit(constructionUnitType, currentTargetPosition, this.playerID);
+        constructionUnitType = null;
+        Stop();
+    }
+
     public void HandleUnitTraining()
     {
         if (this.productionQueue.Count == 0)
@@ -451,7 +478,7 @@ public class UnitController : MonoBehaviour
             // Create the unit and remove it from the queue
             Vector3 position = transform.position;
             position.x += collisionSize;
-            UnitController.CreateUnit(firstUnitType, position,  this);
+            UnitController.CreateUnit(firstUnitType, position, this.playerID, this);
             this.productionQueue.RemoveAt(0);
 
             // Queue up the next unit
@@ -463,12 +490,17 @@ public class UnitController : MonoBehaviour
         }
     }
 
-    public static UnitController CreateUnit(UnitType unitType, Vector3 position, UnitController creatingUnit)
+    public static UnitController CreateUnit(UnitType unitType, Vector3 position, int playerID)
+    {
+        return UnitController.CreateUnit(unitType, position, playerID, null);
+    }
+
+    public static UnitController CreateUnit(UnitType unitType, Vector3 position, int playerID, UnitController creatingUnit)
     {
         GameObject unitObject = Instantiate(Resources.Load<GameObject>("Prefabs/UnitPrefab"), position, Quaternion.identity);
         UnitController unit = unitObject.GetComponent<UnitController>();
-        unit.SetType(unitType);
-        unit.playerID = creatingUnit.playerID;
+        unit.type = unitType;
+        unit.playerID = playerID;
         if (unit.type.unitClass == UnitClass.Unit)
         {
             if (creatingUnit.rallyPointUnit != null)

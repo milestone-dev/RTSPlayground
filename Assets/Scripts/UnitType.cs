@@ -56,6 +56,9 @@ public class UnitType : ScriptableObject
     [Header("Training")]
     public List<UnitType> trainableUnits;
 
+    [Header("Construction")]
+    public List<UnitType> constructableUnits;
+
     public string GetTooltipText()
     {
         return $"{unitDescription}\n\n{productionCost} resources";

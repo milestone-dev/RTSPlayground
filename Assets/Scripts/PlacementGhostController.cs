@@ -10,6 +10,7 @@ public class PlacementGhostController : MonoBehaviour
     public Material ghostMaterialValid;
     public Material ghostMaterialInvalid;
     public bool isPlacementValid;
+    public float gridSize = 2f;
 
     public void setUnitType(UnitType type)
     {
@@ -49,5 +50,24 @@ public class PlacementGhostController : MonoBehaviour
     public void Destroy()
     {
         Destroy(this);
+    }
+
+    public void SetPositionRoundedToGrid(Vector3 targetPosition)
+    {
+        transform.position = new Vector3(
+            RoundToNearestGrid(targetPosition.x),
+            targetPosition.y,
+            RoundToNearestGrid(targetPosition.z));
+    }
+
+    float RoundToNearestGrid(float pos)
+    {
+        float xDiff = pos % gridSize;
+        pos -= xDiff;
+        if (xDiff > (gridSize / 2))
+        {
+            pos += gridSize;
+        }
+        return pos;
     }
 }
