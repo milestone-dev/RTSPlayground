@@ -2,6 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum UnitID
+{
+    StartLocation,
+    Minerals,
+    FactionATownHall,
+    FactionAFort,
+    FactionADepot,
+    FactionAWorker,
+    FactionAFighter,
+}
+
 public enum UnitClass
 {
     Unit,
@@ -13,6 +24,7 @@ public enum UnitClass
 public class UnitType : ScriptableObject
 {
     [Header("Classification")]
+    public UnitID id;
     public UnitClass unitClass;
     public bool canAttack = false;
     public bool canHarvest = false;

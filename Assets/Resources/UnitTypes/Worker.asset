@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e92bb3441c3b64bc8a5ec6a5a7ba45f8, type: 3}
   m_Name: Worker
   m_EditorClassIdentifier: 
+  id: 5
   unitClass: 0
   canAttack: 0
   canHarvest: 1

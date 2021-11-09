@@ -46,6 +46,7 @@ public class UnitController : MonoBehaviour
     public List<UnitType> productionQueue = new List<UnitType>();
     public float remainingProductionTime;
 
+    public UnitID id { get { return type.id; } }
     public bool isOwnedByHumanPlayer  { get { return playerID == PlayerManager.instance.humanPlayerID; } }
     public bool isNeutral  { get { return playerID == 0; } }
     public bool isResourceBusy  { get { return currentTargetUnit != null; } }
@@ -335,7 +336,17 @@ public class UnitController : MonoBehaviour
         Invoke("SetSelectedFalse", 0.3f);
     }
 
+    public void HarvestNearbyResources()
+    {
+        SetTargetUnit(FindClosestFreeResource(), Order.Harvest);
+    }
+
     public void Die()
+    {
+        Remove();
+    }
+
+    public void Remove()
     {
         Destroy(gameObject);
     }
@@ -496,21 +507,22 @@ public class UnitController : MonoBehaviour
     public static UnitController CreateUnit(UnitType unitType, Vector3 position, int playerID, UnitController creatingUnit)
     {
         GameObject unitObject = Instantiate(Resources.Load<GameObject>("Prefabs/UnitPrefab"), position, Quaternion.identity);
+        if (!unitObject) return null;
         UnitController unit = unitObject.GetComponent<UnitController>();
         unit.type = unitType;
         unit.playerID = playerID;
         if (unit.type.unitClass == UnitClass.Unit)
         {
-            if (creatingUnit.rallyPointUnit != null)
+            if (creatingUnit && creatingUnit.rallyPointUnit != null)
             {
                 unit.SetTargetUnit(creatingUnit.rallyPointUnit);
-            } else if (creatingUnit.rallyPointPosition != Vector3.zero)
+            } else if (creatingUnit && creatingUnit.rallyPointPosition != Vector3.zero)
             {
                 unit.SetTargetPosition(creatingUnit.rallyPointPosition);
             } else
             {
-                unit.SetTargetPosition(position + new Vector3(0.1f, 0, 0.1f));
-                unit.Invoke("Stop", .5f);
+                //unit.SetTargetPosition(position + new Vector3(0.1f, 0, 0.1f));
+                //unit.Invoke("Stop", .5f);
             }
         }
         return unit;

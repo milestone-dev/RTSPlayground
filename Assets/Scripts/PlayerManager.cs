@@ -130,7 +130,7 @@ public class PlayerManager : MonoBehaviour
                 unitTypes = firstSelectedUnit.type.constructableUnits;
             }
 
-            if (unitTypes != null)
+            if (unitTypes != null && firstSelectedUnit.playerID == humanPlayerID)
             {
                 const float buttonPadding = 4;
                 const float buttonWidth = 48;
@@ -220,7 +220,7 @@ public class PlayerManager : MonoBehaviour
                 unitTypes = firstSelectedUnit.type.constructableUnits;
             }
 
-            if (unitTypes != null)
+            if (unitTypes != null && firstSelectedUnit.playerID == humanPlayerID)
             {
                 foreach(UnitType unitType in unitTypes)
                 {

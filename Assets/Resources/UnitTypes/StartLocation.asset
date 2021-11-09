@@ -10,18 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e92bb3441c3b64bc8a5ec6a5a7ba45f8, type: 3}
-  m_Name: Minerals
+  m_Name: StartLocation
   m_EditorClassIdentifier: 
-  id: 1
   unitClass: 1
   canAttack: 0
   canHarvest: 0
-  isResourceNode: 1
+  isResourceNode: 0
   isResourceDepot: 0
-  unitName: Minerals
+  unitName: Start Location
   unitDescription: 
   iconTexture: {fileID: 0}
-  prefabModel: {fileID: 919132149155446097, guid: 73fd14870c4a94627b3ad0db82de52e1, type: 3}
+  prefabModel: {fileID: 0}
   portraitModel: {fileID: 0}
   keyCode: 0
   maxHP: 1
@@ -40,6 +39,6 @@ MonoBehaviour:
   harvestSpeed: 0
   harvestAmount: 0
   harvestResourceCarryMax: 0
-  resourcesProvided: 1500
+  resourcesProvided: 0
   trainableUnits: []
   constructableUnits: []
