@@ -8,7 +8,7 @@ public class CameraController : MonoBehaviour
     float scrollSpeed = 20f;
     float panBorderThickness = 10f;
     float minZoom = 10f;
-    float maxZoom = 30f;
+    float maxZoom = 300f;
     public bool mouseMovement = false;
     public Terrain terrain;
     Vector3 cameraInsets = new Vector3(10, 0, 10);

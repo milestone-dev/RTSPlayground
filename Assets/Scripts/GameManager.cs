@@ -25,14 +25,19 @@ public class GameManager : MonoBehaviour
                 int playerID = unit.playerID;
                 Vector3 position = unit.transform.position;
                 unit.Die();
+
                 UnitController townHallUnit = UnitController.CreateUnit(Resources.Load<UnitType>("UnitTypes/TownHall"), position, playerID);
                 UnitType workerUnitType = Resources.Load<UnitType>("UnitTypes/Worker");
+                
                 Vector3 workerCreatePosition = position + new Vector3(3, 0, 3);
                 for (var i = 0; i < 4; i++)
                 {
                     UnitController workerUnit = UnitController.CreateUnit(workerUnitType, workerCreatePosition, playerID);
                     workerUnit.HarvestNearbyResources();
                 }
+                
+                if (!AIController.GetController(playerID) && playerID != PlayerManager.instance.humanPlayerID)
+                    AIController.AddController(playerID);
             }
         }
     }
