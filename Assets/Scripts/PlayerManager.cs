@@ -122,14 +122,12 @@ public class PlayerManager : MonoBehaviour
 
             // Command card -- TODO make this into a generic thing instead
             List<UnitType> unitTypes = null;
-            bool isTraining = true;
-            if (firstSelectedUnit.type.trainableUnits.Count != 0)
+            if (firstSelectedUnit.isUnitTrainer)
             {
                 unitTypes = firstSelectedUnit.type.trainableUnits;
-            } else if (firstSelectedUnit.type.constructableUnits.Count != 0)
+            } else if (firstSelectedUnit.isUnitConstructor)
             {
                 unitTypes = firstSelectedUnit.type.constructableUnits;
-                isTraining = false;
             }
 
             if (unitTypes != null)
@@ -145,11 +143,10 @@ public class PlayerManager : MonoBehaviour
                 for (var i = 0; i < unitTypes.Count; i++)
                 {
                     UnitType unitType = unitTypes[i];
-                    if (GUI.Button(
-                        new Rect(gridX + buttonX, gridY + buttonY, buttonWidth, buttonWidth),
-                        new GUIContent(unitType.name, unitType.GetTooltipText()))
-                    ) {
-                        if (isTraining)
+                    bool buttonPushed = GUI.Button(new Rect(gridX + buttonX, gridY + buttonY, buttonWidth, buttonWidth), new GUIContent(unitType.name, unitType.GetTooltipText()));
+                    if (buttonPushed)
+                    {
+                        if (firstSelectedUnit.isUnitTrainer)
                         {
                             if (playerResources >= unitType.productionCost)
                             {
@@ -210,6 +207,44 @@ public class PlayerManager : MonoBehaviour
 
     void Update()
     {
+        if (selectedUnits.Count > 0)
+        {
+            UnitController firstSelectedUnit = selectedUnits[0];
+            List<UnitType> unitTypes = null;
+            if (firstSelectedUnit.isUnitTrainer)
+            {
+                unitTypes = firstSelectedUnit.type.trainableUnits;
+            }
+            else if (firstSelectedUnit.isUnitConstructor)
+            {
+                unitTypes = firstSelectedUnit.type.constructableUnits;
+            }
+
+            if (unitTypes != null)
+            {
+                foreach(UnitType unitType in unitTypes)
+                {
+                    if (Input.GetKeyDown(unitType.keyCode))
+                    {
+                        if (firstSelectedUnit.isUnitTrainer)
+                        {
+                            if (playerResources >= unitType.productionCost)
+                            {
+                                firstSelectedUnit.TrainUnit(unitType);
+                                playerResources -= unitType.productionCost;
+                            }
+                        }
+                        else
+                        {
+                            if (playerResources >= unitType.productionCost)
+                            {
+                                CreatePlacementGhost(unitType);
+                            }
+                        }
+                    }
+                }
+            }
+        }
         if (isPlacingUnit)
         {
             isDragging = false;

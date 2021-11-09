@@ -50,6 +50,7 @@ public class UnitController : MonoBehaviour
     public bool isNeutral  { get { return playerID == 0; } }
     public bool isResourceBusy  { get { return currentTargetUnit != null; } }
     public bool isUnitTrainer { get { return type.trainableUnits.Count != 0; } }
+    public bool isUnitConstructor { get { return type.constructableUnits.Count != 0; } }
     public bool isTrainingUnit { get { return isUnitTrainer && remainingProductionTime > 0 && productionQueue.Count > 0; } }
     public bool isUnit {  get { return type.unitClass == UnitClass.Unit; } }
     public bool isBuilding {  get { return type.unitClass == UnitClass.Building; } }
@@ -118,16 +119,13 @@ public class UnitController : MonoBehaviour
             var modelMaterials = new Material[renderer.materials.Length];
             for (var i = 0; i < modelMaterials.Length; i++)
             {
-                Material m = renderer.materials[i];
-                Debug.Log($"{m.color}, {Color.cyan}");
-                if (m.color == Color.cyan)
+                if (renderer.materials[i].color == Color.cyan)
                 {
                     modelMaterials[i] = PlayerManager.instance.getPlayerMaterial(playerID);
                 } else
                 {
                     modelMaterials[i] = renderer.materials[i];
                 }
-                
             }
             renderer.materials = modelMaterials;
         }

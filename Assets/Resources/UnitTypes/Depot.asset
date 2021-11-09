@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e92bb3441c3b64bc8a5ec6a5a7ba45f8, type: 3}
-  m_Name: TownHall
+  m_Name: Depot
   m_EditorClassIdentifier: 
   unitClass: 1
   canAttack: 0
   canHarvest: 0
   isResourceNode: 0
   isResourceDepot: 1
-  unitName: Town Hall
-  unitDescription: 
+  unitName: Depot
+  unitDescription: Resource depot
   iconTexture: {fileID: 0}
-  prefabModel: {fileID: 919132149155446097, guid: 55ed7a2d9f88d4c32bba8643b77ccc0c, type: 3}
+  prefabModel: {fileID: 919132149155446097, guid: a8bc77fde3c7f4e7ab55f203ba94f530, type: 3}
   portraitModel: {fileID: 0}
-  keyCode: 116
-  maxHP: 1000
-  productionCost: 400
+  keyCode: 100
+  maxHP: 300
+  productionCost: 100
   productionTime: 50
   movementSpeed: 0
   movementAcceleration: 0
@@ -40,6 +40,5 @@ MonoBehaviour:
   harvestAmount: 0
   harvestResourceCarryMax: 0
   resourcesProvided: 0
-  trainableUnits:
-  - {fileID: 11400000, guid: 8111e2f78ba9c4f4f9a722be87b45f5e, type: 2}
+  trainableUnits: []
   constructableUnits: []

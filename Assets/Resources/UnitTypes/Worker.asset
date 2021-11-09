@@ -22,9 +22,10 @@ MonoBehaviour:
   iconTexture: {fileID: 0}
   prefabModel: {fileID: 919132149155446097, guid: 5a4c52831cc8943ccb255acb4d4f5ae2, type: 3}
   portraitModel: {fileID: 0}
+  keyCode: 119
   maxHP: 25
   productionCost: 50
-  productionTime: 0.1
+  productionTime: 15
   movementSpeed: 8
   movementAcceleration: 15
   movementAngularSpeed: 180
@@ -42,3 +43,5 @@ MonoBehaviour:
   trainableUnits: []
   constructableUnits:
   - {fileID: 11400000, guid: 14a8b3d882e3f4abeaf49c3ffd5fd9de, type: 2}
+  - {fileID: 11400000, guid: 22e296aa465894ac3b9c9ce752236282, type: 2}
+  - {fileID: 11400000, guid: e31b4f000c6274383b5943be64221010, type: 2}

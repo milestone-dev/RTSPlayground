@@ -25,12 +25,14 @@ public class UnitType : ScriptableObject
     public Texture2D iconTexture;
     public GameObject prefabModel;
     public GameObject portraitModel;
+    public KeyCode keyCode;
 
     [Header("Base stats")]
     public float maxHP = 1;
     public float productionCost = 0;
     public float productionTime = 0;
 
+    [Header("Movement")]
     public float movementSpeed = 5;
     public float movementAcceleration = 5;
     public float movementAngularSpeed = 180;
