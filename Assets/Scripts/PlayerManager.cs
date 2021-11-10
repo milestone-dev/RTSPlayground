@@ -87,7 +87,10 @@ public class PlayerManager : MonoBehaviour
             }
 
             if (firstSelectedUnit.id == UnitID.FactionATownHall)
-                unitInfoData.Add("Resources", firstSelectedUnit.ai.resources);
+            {
+                if (firstSelectedUnit.ai) unitInfoData.Add("Resources", firstSelectedUnit.ai.resources);
+                else unitInfoData.Add("Resources", playerResources);
+            }
 
 
             if (firstSelectedUnit.isUnitProducer)
