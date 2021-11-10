@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e92bb3441c3b64bc8a5ec6a5a7ba45f8, type: 3}
-  m_Name: Worker
+  m_Name: FactionAWorker
   m_EditorClassIdentifier: 
   id: 5
   unitClass: 0
@@ -27,6 +27,7 @@ MonoBehaviour:
   maxHP: 25
   productionCost: 50
   productionTime: 15
+  dependencies: 02000000
   movementSpeed: 8
   movementAcceleration: 15
   movementAngularSpeed: 180

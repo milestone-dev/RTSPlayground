@@ -23,6 +23,12 @@ public enum UnitClass
 [CreateAssetMenu(fileName = "Unit Stats", menuName = "Unit Stats")]
 public class UnitType : ScriptableObject
 {
+    public static UnitType Get(UnitID unitID) {
+        UnitType unitType = Resources.Load<UnitType>("UnitTypes/" + unitID.ToString());
+        if (!unitType) Debug.LogError($"No UnitType found for {unitID}");
+        return unitType;
+    }
+
     [Header("Classification")]
     public UnitID id;
     public UnitClass unitClass;
@@ -43,6 +49,7 @@ public class UnitType : ScriptableObject
     public float maxHP = 1;
     public float productionCost = 0;
     public float productionTime = 0;
+    public List<UnitID> dependencies;
 
     [Header("Movement")]
     public float movementSpeed = 5;

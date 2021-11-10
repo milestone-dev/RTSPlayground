@@ -10,23 +10,24 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e92bb3441c3b64bc8a5ec6a5a7ba45f8, type: 3}
-  m_Name: Depot
+  m_Name: FactionAFort
   m_EditorClassIdentifier: 
-  id: 4
+  id: 3
   unitClass: 1
   canAttack: 0
   canHarvest: 0
   isResourceNode: 0
-  isResourceDepot: 1
-  unitName: Depot
-  unitDescription: Resource depot
+  isResourceDepot: 0
+  unitName: Fort
+  unitDescription: Primary military unit training structure
   iconTexture: {fileID: 0}
-  prefabModel: {fileID: 919132149155446097, guid: a8bc77fde3c7f4e7ab55f203ba94f530, type: 3}
+  prefabModel: {fileID: 919132149155446097, guid: 17dab958da5f4404c88c32cfca239068, type: 3}
   portraitModel: {fileID: 0}
-  keyCode: 100
-  maxHP: 300
-  productionCost: 100
+  keyCode: 102
+  maxHP: 1000
+  productionCost: 150
   productionTime: 50
+  dependencies: 02000000
   movementSpeed: 0
   movementAcceleration: 0
   movementAngularSpeed: 0
@@ -41,5 +42,6 @@ MonoBehaviour:
   harvestAmount: 0
   harvestResourceCarryMax: 0
   resourcesProvided: 0
-  trainableUnits: []
+  trainableUnits:
+  - {fileID: 11400000, guid: b5490506eabcf4c409c51f9cdcb8ccc0, type: 2}
   constructableUnits: []

@@ -24,10 +24,13 @@ public class GameManager : MonoBehaviour
             {
                 int playerID = unit.playerID;
                 Vector3 position = unit.transform.position;
+                if (!AIController.GetController(playerID) && playerID != PlayerManager.instance.humanPlayerID)
+                    AIController.AddController(playerID);
+
                 unit.Die();
 
-                UnitController townHallUnit = UnitController.CreateUnit(Resources.Load<UnitType>("UnitTypes/TownHall"), position, playerID);
-                UnitType workerUnitType = Resources.Load<UnitType>("UnitTypes/Worker");
+                UnitController townHallUnit = UnitController.CreateUnit(UnitType.Get(UnitID.FactionATownHall), position, playerID);
+                UnitType workerUnitType = UnitType.Get(UnitID.FactionAWorker);
                 
                 Vector3 workerCreatePosition = position + new Vector3(3, 0, 3);
                 for (var i = 0; i < 4; i++)
@@ -36,8 +39,7 @@ public class GameManager : MonoBehaviour
                     workerUnit.HarvestNearbyResources();
                 }
                 
-                if (!AIController.GetController(playerID) && playerID != PlayerManager.instance.humanPlayerID)
-                    AIController.AddController(playerID);
+
             }
         }
     }

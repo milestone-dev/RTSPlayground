@@ -34,6 +34,11 @@ public class PlayerManager : MonoBehaviour
         return playerMaterials[playerID];
     }
 
+    public bool CanAffordUnit(UnitID unitID)
+    {
+        return UnitType.Get(unitID).productionCost <= playerResources;
+    }
+
     private void CreatePlacementGhost(UnitType unitType)
     {
         placementGhost = Instantiate(Resources.Load<GameObject>("Prefabs/PlacementGhost"), Vector3.zero, Quaternion.identity).GetComponent<PlacementGhostController>();
@@ -81,7 +86,11 @@ public class PlayerManager : MonoBehaviour
                     unitInfoData.Add("Rally Point Unit", firstSelectedUnit.rallyPointUnit);
             }
 
-            if (firstSelectedUnit.isUnitTrainer)
+            if (firstSelectedUnit.id == UnitID.FactionATownHall)
+                unitInfoData.Add("Resources", firstSelectedUnit.ai.resources);
+
+
+            if (firstSelectedUnit.isUnitProducer)
             {
                 unitInfoData.Add("Training Queue", firstSelectedUnit.productionQueue.Count);
             }
@@ -90,6 +99,7 @@ public class PlayerManager : MonoBehaviour
             {
                 unitInfoData.Add("Destination", firstSelectedUnit.navAgent.destination);
                 unitInfoData.Add("Velocity", firstSelectedUnit.navAgent.velocity);
+                unitInfoData.Add("Path", firstSelectedUnit.navAgent.pathStatus);
                 unitInfoData.Add("Remaining distance", firstSelectedUnit.navAgent.remainingDistance);
                 unitInfoData.Add("Stopped", firstSelectedUnit.navAgent.isStopped);
             }
@@ -122,7 +132,7 @@ public class PlayerManager : MonoBehaviour
 
             // Command card -- TODO make this into a generic thing instead
             List<UnitType> unitTypes = null;
-            if (firstSelectedUnit.isUnitTrainer)
+            if (firstSelectedUnit.isUnitProducer)
             {
                 unitTypes = firstSelectedUnit.type.trainableUnits;
             } else if (firstSelectedUnit.isUnitConstructor)
@@ -146,12 +156,11 @@ public class PlayerManager : MonoBehaviour
                     bool buttonPushed = GUI.Button(new Rect(gridX + buttonX, gridY + buttonY, buttonWidth, buttonWidth), new GUIContent(unitType.name, unitType.GetTooltipText()));
                     if (buttonPushed)
                     {
-                        if (firstSelectedUnit.isUnitTrainer)
+                        if (firstSelectedUnit.isUnitProducer)
                         {
                             if (playerResources >= unitType.productionCost)
                             {
                                 firstSelectedUnit.TrainUnit(unitType);
-                                playerResources -= unitType.productionCost;
                             }
                         } else
                         {
@@ -211,7 +220,7 @@ public class PlayerManager : MonoBehaviour
         {
             UnitController firstSelectedUnit = selectedUnits[0];
             List<UnitType> unitTypes = null;
-            if (firstSelectedUnit.isUnitTrainer)
+            if (firstSelectedUnit.isUnitProducer)
             {
                 unitTypes = firstSelectedUnit.type.trainableUnits;
             }
@@ -226,7 +235,7 @@ public class PlayerManager : MonoBehaviour
                 {
                     if (Input.GetKeyDown(unitType.keyCode))
                     {
-                        if (firstSelectedUnit.isUnitTrainer)
+                        if (firstSelectedUnit.isUnitProducer)
                         {
                             if (playerResources >= unitType.productionCost)
                             {

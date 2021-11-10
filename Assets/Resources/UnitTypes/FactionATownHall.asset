@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e92bb3441c3b64bc8a5ec6a5a7ba45f8, type: 3}
-  m_Name: TownHall
+  m_Name: FactionATownHall
   m_EditorClassIdentifier: 
   id: 2
   unitClass: 1
@@ -19,7 +19,7 @@ MonoBehaviour:
   isResourceNode: 0
   isResourceDepot: 1
   unitName: Town Hall
-  unitDescription: 
+  unitDescription: Main resource depot and harvester construction structure
   iconTexture: {fileID: 0}
   prefabModel: {fileID: 919132149155446097, guid: 55ed7a2d9f88d4c32bba8643b77ccc0c, type: 3}
   portraitModel: {fileID: 0}
@@ -27,6 +27,7 @@ MonoBehaviour:
   maxHP: 1000
   productionCost: 400
   productionTime: 50
+  dependencies: 
   movementSpeed: 0
   movementAcceleration: 0
   movementAngularSpeed: 0
@@ -43,4 +44,5 @@ MonoBehaviour:
   resourcesProvided: 0
   trainableUnits:
   - {fileID: 11400000, guid: 8111e2f78ba9c4f4f9a722be87b45f5e, type: 2}
+  - {fileID: 11400000, guid: b5490506eabcf4c409c51f9cdcb8ccc0, type: 2}
   constructableUnits: []

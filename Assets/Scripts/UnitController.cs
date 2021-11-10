@@ -11,6 +11,7 @@ public enum Order
     Guard,
     Attack,
     AttackMove,
+    Patrol,
     Harvest,
     ReturnResources,
     Construct,
@@ -41,6 +42,8 @@ public class UnitController : MonoBehaviour
     public UnitController lastTargetResourceUnit;
     public float resourcesLeft;
 
+    public AIController ai;
+
     public UnitType constructionUnitType;
 
     public List<UnitType> productionQueue = new List<UnitType>();
@@ -50,11 +53,13 @@ public class UnitController : MonoBehaviour
     public bool isOwnedByHumanPlayer  { get { return playerID == PlayerManager.instance.humanPlayerID; } }
     public bool isNeutral  { get { return playerID == 0; } }
     public bool isResourceBusy  { get { return currentTargetUnit != null; } }
-    public bool isUnitTrainer { get { return type.trainableUnits.Count != 0; } }
+    public bool isUnitProducer { get { return type.trainableUnits.Count != 0; } }
     public bool isUnitConstructor { get { return type.constructableUnits.Count != 0; } }
-    public bool isTrainingUnit { get { return isUnitTrainer && remainingProductionTime > 0 && productionQueue.Count > 0; } }
+    public bool isTrainingUnit { get { return isUnitProducer && remainingProductionTime > 0 && productionQueue.Count > 0; } }
     public bool isUnit {  get { return type.unitClass == UnitClass.Unit; } }
     public bool isBuilding {  get { return type.unitClass == UnitClass.Building; } }
+    public bool isHarvester {  get { return type.canHarvest; } }
+    public bool isMilitary {  get { return type.canAttack; } }
     public bool IsEnemy(UnitController unit) { return !unit.isNeutral && unit.playerID != playerID; }
     public bool IsOwn(UnitController unit) { return unit.playerID == playerID; }
 
@@ -135,6 +140,16 @@ public class UnitController : MonoBehaviour
         hp = type.maxHP;
         resourcesLeft = type.resourcesProvided;
         harvestCooldown = type.harvestSpeed;
+
+        ai = AIController.GetController(playerID);
+        if (ai)
+        {
+            ai.AddUnit(this);
+            if (type.canHarvest) ai.AddHarvesterUnit(this);
+            if (type.canAttack) ai.AddMilitaryUnit(this);
+            if (isUnitConstructor) ai.AddConstructionUnit(this);
+            if (isUnitProducer) ai.AddProductionStructureUnit(this);
+        }
     }
 
     private void setOrder(Order order)
@@ -168,13 +183,16 @@ public class UnitController : MonoBehaviour
         if (navAgent && currentTargetPosition != Vector3.zero && navAgent.destination != currentTargetPosition)
             navAgent.destination = currentTargetPosition;
 
-        if ((currentOrder == Order.Move || currentOrder == Order.AttackMove) && navAgent && navAgent.destination == transform.position)
+        if ((currentOrder == Order.Move || currentOrder == Order.AttackMove) && navAgent && navAgent.remainingDistance < 0.5)
             Stop();
+
+        if (currentOrder == Order.Patrol && navAgent && (navAgent.remainingDistance < 0.5 || navAgent.pathStatus == NavMeshPathStatus.PathPartial))
+            PatrolNearbyArea();
 
         if (currentOrder == Order.Stop && type.canAttack)
             setOrder(Order.Guard);
 
-        if (currentOrder == Order.Guard || currentOrder == Order.AttackMove)
+        if (currentOrder == Order.Guard || currentOrder == Order.AttackMove || currentOrder == Order.Patrol)
         {
             UnitController enemyUnit = FindEnemyUnitInRange();
             if (enemyUnit)
@@ -224,7 +242,7 @@ public class UnitController : MonoBehaviour
             }
         }
 
-        if (isUnitTrainer)
+        if (isUnitProducer)
         {
             HandleUnitTraining();
         }
@@ -341,6 +359,11 @@ public class UnitController : MonoBehaviour
         SetTargetUnit(FindClosestFreeResource(), Order.Harvest);
     }
 
+    public void PatrolNearbyArea()
+    {
+        SetTargetPosition(transform.position + new Vector3(Random.Range(-15, 15), 0, Random.Range(-15, 15)), Order.Patrol);
+    }
+
     public void Die()
     {
         Remove();
@@ -348,6 +371,7 @@ public class UnitController : MonoBehaviour
 
     public void Remove()
     {
+        if (ai) ai.RemoveUnit(this);
         Destroy(gameObject);
     }
 
@@ -375,12 +399,6 @@ public class UnitController : MonoBehaviour
         if (!currentTargetUnit || !type.canHarvest || !currentTargetUnit.type.isResourceNode)
             return;
 
-        if (DistanceToUnitBounds(currentTargetUnit) > type.harvestRange)
-        {
-            mineParticleSystem.Stop();
-            MoveTorwardsTargetUnit();
-            return;
-        }
 
         if (currentTargetUnit.isResourceBusy && currentTargetUnit.currentTargetUnit != this)
         {
@@ -394,6 +412,13 @@ public class UnitController : MonoBehaviour
                 MoveTorwardsTargetUnit();
                 StopMovingTorwardsTarget();
             }
+            return;
+        }
+
+        if (DistanceToUnitBounds(currentTargetUnit) > type.harvestRange)
+        {
+            mineParticleSystem.Stop();
+            MoveTorwardsTargetUnit();
             return;
         }
 
@@ -430,7 +455,13 @@ public class UnitController : MonoBehaviour
 
         StopMovingTorwardsTarget();
 
-        PlayerManager.instance.playerResources += harvestResourceCarryAmount;
+        if (ai)
+        {
+            ai.AddResources(harvestResourceCarryAmount);
+        } else
+        {
+            PlayerManager.instance.playerResources += harvestResourceCarryAmount;
+        }
         harvestResourceCarryAmount = 0;
         if (lastTargetResourceUnit)
             SetTargetUnit(lastTargetResourceUnit, Order.Harvest);
@@ -458,12 +489,23 @@ public class UnitController : MonoBehaviour
         currentTargetUnit.Damage(type.attackDamage, this);
     }
 
-    public void TrainUnit(UnitType unitType)
+    public bool TrainUnit(UnitType unitType)
     {
+        if (ai)
+        {
+            if (!ai.CanAffordUnit(unitType.id)) return false;
+            ai.SubtractResources(unitType.productionCost);
+        } else
+        {
+            if (!PlayerManager.instance.CanAffordUnit(unitType.id)) return false;
+            PlayerManager.instance.playerResources -= unitType.productionCost;
+        }
+
         if (this.productionQueue.Count == 0)
             this.remainingProductionTime = unitType.productionTime;
 
         this.productionQueue.Add(unitType);
+        return true;
     }
 
     public void ConstructIntendedUnit()
@@ -487,8 +529,10 @@ public class UnitController : MonoBehaviour
             // Create the unit and remove it from the queue
             Vector3 position = transform.position;
             position.x += collisionSize;
-            UnitController.CreateUnit(firstUnitType, position, this.playerID, this);
+            UnitController producedUnit = UnitController.CreateUnit(firstUnitType, position, this.playerID, this);
             this.productionQueue.RemoveAt(0);
+
+            if (ai) ai.UnitProduced(producedUnit);
 
             // Queue up the next unit
             if (this.productionQueue.Count > 0)

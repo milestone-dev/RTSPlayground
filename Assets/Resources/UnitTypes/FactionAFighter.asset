@@ -10,37 +10,37 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e92bb3441c3b64bc8a5ec6a5a7ba45f8, type: 3}
-  m_Name: Fort
+  m_Name: FactionAFighter
   m_EditorClassIdentifier: 
-  id: 3
-  unitClass: 1
-  canAttack: 0
+  id: 6
+  unitClass: 0
+  canAttack: 1
   canHarvest: 0
   isResourceNode: 0
   isResourceDepot: 0
-  unitName: Fort
-  unitDescription: Primary military unit training structure
+  unitName: Fighter
+  unitDescription: Basic military unit.
   iconTexture: {fileID: 0}
-  prefabModel: {fileID: 919132149155446097, guid: 17dab958da5f4404c88c32cfca239068, type: 3}
+  prefabModel: {fileID: 919132149155446097, guid: a624cc16ff9be4a1bae353b10e71010e, type: 3}
   portraitModel: {fileID: 0}
   keyCode: 102
-  maxHP: 1000
-  productionCost: 150
-  productionTime: 50
-  movementSpeed: 0
-  movementAcceleration: 0
-  movementAngularSpeed: 0
-  movementStoppingDistance: 0
-  attackAggroRange: 0
-  attackRange: 0
-  attackSpeed: 0
-  attackDamage: 0
+  maxHP: 50
+  productionCost: 50
+  productionTime: 25
+  dependencies: 
+  movementSpeed: 8
+  movementAcceleration: 12
+  movementAngularSpeed: 180
+  movementStoppingDistance: 0.5
+  attackAggroRange: 20
+  attackRange: 3
+  attackSpeed: 1
+  attackDamage: 5
   harvestSeekRange: 0
   harvestRange: 0
   harvestSpeed: 0
   harvestAmount: 0
   harvestResourceCarryMax: 0
   resourcesProvided: 0
-  trainableUnits:
-  - {fileID: 11400000, guid: b5490506eabcf4c409c51f9cdcb8ccc0, type: 2}
+  trainableUnits: []
   constructableUnits: []
