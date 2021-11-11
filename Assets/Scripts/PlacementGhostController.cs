@@ -12,7 +12,7 @@ public class PlacementGhostController : MonoBehaviour
     public bool isPlacementValid;
     public float gridSize = 2f;
 
-    public void setUnitType(UnitType type)
+    public void SetUnitType(UnitType type)
     {
         unitType = type;
         model = Instantiate(unitType.prefabModel, Vector3.zero, Quaternion.identity);
@@ -21,12 +21,12 @@ public class PlacementGhostController : MonoBehaviour
         placementGhostObjectRenderer = model.GetComponent<Renderer>();
     }
 
-    private void SetPlacementGhostValid(bool valid)
+    public void UpdatePlacementValidityVisualization()
     {
         var ghostMaterials = new Material[placementGhostObjectRenderer.materials.Length];
         for (var i = 0; i < ghostMaterials.Length; i++)
         {
-            ghostMaterials[i] = valid ? ghostMaterialValid : ghostMaterialInvalid;
+            ghostMaterials[i] = isPlacementValid ? ghostMaterialValid : ghostMaterialInvalid;
         }
         placementGhostObjectRenderer.materials = ghostMaterials;
     }
@@ -44,12 +44,11 @@ public class PlacementGhostController : MonoBehaviour
             }
         }
         isPlacementValid = valid;
-        SetPlacementGhostValid(valid);
     }
 
     public void Destroy()
     {
-        Destroy(this);
+        Object.Destroy(this.gameObject);
     }
 
     public void SetPositionRoundedToGrid(Vector3 targetPosition)

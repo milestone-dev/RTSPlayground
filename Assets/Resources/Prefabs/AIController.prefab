@@ -44,7 +44,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerID: 0
-  resources: 100
+  resources: 50
   units: []
   harvesterUnits: []
   militaryUnits: []

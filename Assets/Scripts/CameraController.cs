@@ -11,13 +11,13 @@ public class CameraController : MonoBehaviour
     float maxZoom = 300f;
     public bool mouseMovement = false;
     public Terrain terrain;
-    Vector3 cameraInsets = new Vector3(10, 0, 10);
+    Vector3 cameraInsets = new Vector3(0, 0, 0);
 
     // Update is called once per frame 
     void Update()
     {
-        if (mouseMovement && Input.GetKey(KeyCode.Escape)) mouseMovement = false;
-        if (!mouseMovement && Input.GetMouseButton(0)) mouseMovement = true;
+        if (mouseMovement && Input.GetKeyUp(KeyCode.Escape)) mouseMovement = false;
+        if (!mouseMovement && Input.GetKeyUp(KeyCode.Escape)) mouseMovement = true;
 
         Vector3 position = transform.position; 
         if (Input.GetKey(KeyCode.UpArrow) || (mouseMovement && Input.mousePosition.y >= Screen.height - panBorderThickness))

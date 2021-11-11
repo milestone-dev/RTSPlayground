@@ -40,6 +40,7 @@ public class UnitController : MonoBehaviour
     public Vector3 currentTargetPosition = Vector3.zero;
     public UnitController currentTargetUnit;
     public UnitController lastTargetResourceUnit;
+    public UnitController aiDataLastConstructedUnit;
     public float resourcesLeft;
 
     public AIController ai;
@@ -249,8 +250,8 @@ public class UnitController : MonoBehaviour
 
         if (type.canHarvest)
         {
-            if ((currentOrder == Order.Harvest || currentOrder == Order.ReturnResources) && navAgent.radius != 0.4f)
-                navAgent.radius = 0.4f;
+            if ((currentOrder == Order.Harvest || currentOrder == Order.ReturnResources) && navAgent.radius != 0.1f)
+                navAgent.radius = 0.1f;
             else if ((currentOrder != Order.Harvest && currentOrder != Order.ReturnResources) && navAgent.radius != 0.5f)
                 navAgent.radius = 0.5f;
         }
@@ -466,7 +467,7 @@ public class UnitController : MonoBehaviour
         if (lastTargetResourceUnit)
             SetTargetUnit(lastTargetResourceUnit, Order.Harvest);
         else
-            ClearTargetUnit();
+            HarvestNearbyResources();
     }
 
     public void AttackTargetUnit()
@@ -508,20 +509,24 @@ public class UnitController : MonoBehaviour
         return true;
     }
 
-    public void ConstructIntendedUnit()
+    public bool ConstructIntendedUnit()
     {
         if (Vector3.Distance(transform.position, currentTargetPosition) > 1)
-            return;
+            return false;
 
-        UnitController.CreateUnit(constructionUnitType, currentTargetPosition, this.playerID);
+        aiDataLastConstructedUnit = UnitController.CreateUnit(constructionUnitType, currentTargetPosition, this.playerID);
         constructionUnitType = null;
         Stop();
+        return true;
     }
 
     public void HandleUnitTraining()
     {
         if (this.productionQueue.Count == 0)
             return;
+
+        if (GameManager.instance.operationCWAL && this.remainingProductionTime > 1)
+            this.remainingProductionTime = 1;
 
         UnitType firstUnitType = this.productionQueue[0];
         if (this.remainingProductionTime <= 0)
@@ -570,6 +575,11 @@ public class UnitController : MonoBehaviour
             }
         }
         return unit;
+    }
+
+    public bool CanMoveToPoint(Vector3 point)
+    {
+        return NavMesh.CalculatePath(transform.position, point, NavMesh.AllAreas, new NavMeshPath());
     }
 
     // TODO Break out to separate global helper class?

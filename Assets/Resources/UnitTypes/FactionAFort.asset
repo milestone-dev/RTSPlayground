@@ -25,7 +25,7 @@ MonoBehaviour:
   portraitModel: {fileID: 0}
   keyCode: 102
   maxHP: 1000
-  productionCost: 150
+  productionCost: 5
   productionTime: 50
   dependencies: 02000000
   movementSpeed: 0
@@ -42,6 +42,5 @@ MonoBehaviour:
   harvestAmount: 0
   harvestResourceCarryMax: 0
   resourcesProvided: 0
-  trainableUnits:
-  - {fileID: 11400000, guid: b5490506eabcf4c409c51f9cdcb8ccc0, type: 2}
-  constructableUnits: []
+  trainableUnits: 06000000
+  constructableUnits: 

@@ -75,10 +75,10 @@ public class UnitType : ScriptableObject
     public float resourcesProvided;
 
     [Header("Training")]
-    public List<UnitType> trainableUnits;
+    public List<UnitID> trainableUnits;
 
     [Header("Construction")]
-    public List<UnitType> constructableUnits;
+    public List<UnitID> constructableUnits;
 
     public string GetTooltipText()
     {

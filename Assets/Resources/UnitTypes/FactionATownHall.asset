@@ -42,7 +42,5 @@ MonoBehaviour:
   harvestAmount: 0
   harvestResourceCarryMax: 0
   resourcesProvided: 0
-  trainableUnits:
-  - {fileID: 11400000, guid: 8111e2f78ba9c4f4f9a722be87b45f5e, type: 2}
-  - {fileID: 11400000, guid: b5490506eabcf4c409c51f9cdcb8ccc0, type: 2}
-  constructableUnits: []
+  trainableUnits: 05000000
+  constructableUnits: 

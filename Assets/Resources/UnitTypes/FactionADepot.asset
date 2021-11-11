@@ -27,7 +27,7 @@ MonoBehaviour:
   maxHP: 300
   productionCost: 100
   productionTime: 50
-  dependencies: []
+  dependencies: 
   movementSpeed: 0
   movementAcceleration: 0
   movementAngularSpeed: 0
@@ -42,5 +42,5 @@ MonoBehaviour:
   harvestAmount: 0
   harvestResourceCarryMax: 0
   resourcesProvided: 0
-  trainableUnits: []
-  constructableUnits: []
+  trainableUnits: 
+  constructableUnits: 

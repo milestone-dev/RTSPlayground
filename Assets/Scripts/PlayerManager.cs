@@ -42,7 +42,7 @@ public class PlayerManager : MonoBehaviour
     private void CreatePlacementGhost(UnitType unitType)
     {
         placementGhost = Instantiate(Resources.Load<GameObject>("Prefabs/PlacementGhost"), Vector3.zero, Quaternion.identity).GetComponent<PlacementGhostController>();
-        placementGhost.setUnitType(unitType);
+        placementGhost.SetUnitType(unitType);
     }
 
     private void OnGUI()
@@ -63,8 +63,19 @@ public class PlayerManager : MonoBehaviour
         GUI.Box(new Rect(0, 0, Screen.width - inset * 2, sectionHeight - inset), "");
         if (selectedUnits.Count > 0)
         {
-            // Unit info
             UnitController firstSelectedUnit = selectedUnits[0];
+
+            // Path
+            if (firstSelectedUnit.navAgent)
+            {
+                for (int i = 0; i < firstSelectedUnit.navAgent.path.corners.Length - 1; i++)
+                {
+                    Debug.DrawLine(firstSelectedUnit.navAgent.path.corners[i], firstSelectedUnit.navAgent.path.corners[i + 1], Color.red);
+                }
+            }
+
+
+            // Unit info
             var unitInfoData = new Dictionary<object, object>();
             unitInfoData.Add(firstSelectedUnit.type.unitName, null);
             unitInfoData.Add("Player", firstSelectedUnit.playerID);
@@ -134,16 +145,16 @@ public class PlayerManager : MonoBehaviour
             }
 
             // Command card -- TODO make this into a generic thing instead
-            List<UnitType> unitTypes = null;
+            List<UnitID> unitTypeIDs = null;
             if (firstSelectedUnit.isUnitProducer)
             {
-                unitTypes = firstSelectedUnit.type.trainableUnits;
+                unitTypeIDs = firstSelectedUnit.type.trainableUnits;
             } else if (firstSelectedUnit.isUnitConstructor)
             {
-                unitTypes = firstSelectedUnit.type.constructableUnits;
+                unitTypeIDs = firstSelectedUnit.type.constructableUnits;
             }
 
-            if (unitTypes != null && firstSelectedUnit.playerID == humanPlayerID)
+            if (unitTypeIDs != null && firstSelectedUnit.playerID == humanPlayerID)
             {
                 const float buttonPadding = 4;
                 const float buttonWidth = 48;
@@ -153,9 +164,9 @@ public class PlayerManager : MonoBehaviour
                 float buttonX = 0;
                 float buttonY = 0;
                 GUI.skin.button.fontSize = 10;
-                for (var i = 0; i < unitTypes.Count; i++)
+                for (var i = 0; i < unitTypeIDs.Count; i++)
                 {
-                    UnitType unitType = unitTypes[i];
+                    UnitType unitType = UnitType.Get(unitTypeIDs[i]);
                     bool buttonPushed = GUI.Button(new Rect(gridX + buttonX, gridY + buttonY, buttonWidth, buttonWidth), new GUIContent(unitType.name, unitType.GetTooltipText()));
                     if (buttonPushed)
                     {
@@ -222,20 +233,21 @@ public class PlayerManager : MonoBehaviour
         if (selectedUnits.Count > 0)
         {
             UnitController firstSelectedUnit = selectedUnits[0];
-            List<UnitType> unitTypes = null;
+            List<UnitID> unitTypeIDs = null;
             if (firstSelectedUnit.isUnitProducer)
             {
-                unitTypes = firstSelectedUnit.type.trainableUnits;
+                unitTypeIDs = firstSelectedUnit.type.trainableUnits;
             }
             else if (firstSelectedUnit.isUnitConstructor)
             {
-                unitTypes = firstSelectedUnit.type.constructableUnits;
+                unitTypeIDs = firstSelectedUnit.type.constructableUnits;
             }
 
-            if (unitTypes != null && firstSelectedUnit.playerID == humanPlayerID)
+            if (unitTypeIDs != null && firstSelectedUnit.playerID == humanPlayerID)
             {
-                foreach(UnitType unitType in unitTypes)
+                foreach(UnitID unitID in unitTypeIDs)
                 {
+                    UnitType unitType = UnitType.Get(unitID);
                     if (Input.GetKeyDown(unitType.keyCode))
                     {
                         if (firstSelectedUnit.isUnitProducer)
@@ -267,6 +279,7 @@ public class PlayerManager : MonoBehaviour
                 placementGhost.SetPositionRoundedToGrid(point);
                 //placementGhost.gameObject.transform.position = point;
                 placementGhost.UpdatePlacement();
+                placementGhost.UpdatePlacementValidityVisualization();
                 if(placementGhost.isPlacementValid)
                 {
                     if (Input.GetMouseButtonDown(0))

@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.AI;
 
-[System.Serializable]
 public class AIRequest
 {
     public bool completed;
@@ -13,7 +13,6 @@ public class AIRequest
     }
 }
 
-[System.Serializable]
 public class AITrainUnitAmountRequest : AIRequest
 {
     UnitID unitID;
@@ -38,6 +37,49 @@ public class AITrainUnitAmountRequest : AIRequest
     }
 }
 
+public class AIConstructUnitAmountRequest : AIRequest
+{
+    UnitID unitID;
+    UnitController constructorUnit;
+
+    public AIConstructUnitAmountRequest(UnitID ui)
+    {
+        unitID = ui;
+    }
+
+    public override bool complete(AIController ai)
+    {
+        if (!constructorUnit)
+            constructorUnit = ai.FindUnit(UnitID.FactionAWorker);
+
+        if (constructorUnit && constructorUnit.currentOrder != Order.Construct)
+        {
+            if (ai.UnitDependenciesSatisfied(unitID) && ai.CanAffordUnit(unitID))
+            {
+                UnitController townHall = ai.FindUnit(UnitID.FactionATownHall);
+                Vector3 originPosition = townHall.transform.position;
+                Vector3 placementPosition = originPosition  + new Vector3(Random.Range(-30, 30), 0, Random.Range(-30, 30));
+                if (constructorUnit.CanMoveToPoint(placementPosition))
+                { 
+                    if (ai.CanPlaceStructure(unitID, placementPosition))
+                    {
+                        constructorUnit.constructionUnitType = UnitType.Get(unitID);
+                        constructorUnit.SetTargetPosition(townHall.transform.position + new Vector3(Random.Range(-30, 30), 0, Random.Range(-30, 30)), Order.Construct);
+                    }
+                }
+            }
+        }
+
+        if  (constructorUnit && constructorUnit.aiDataLastConstructedUnit && constructorUnit.aiDataLastConstructedUnit.type.id == unitID)
+        {
+            constructorUnit.SetTargetUnit(ai.FindUnit(UnitID.FactionATownHall), Order.ReturnResources);
+            return true;
+        }
+
+        return false;
+    }
+}
+
 public class AIController : MonoBehaviour
 {
     public static AIController[] controllers = new AIController[9];
@@ -52,7 +94,7 @@ public class AIController : MonoBehaviour
     public bool IsPlayer(int id) { return id == playerID; }
     public List<AIRequest> requestList = new List<AIRequest>();
     
-    public float resources = 100;
+    public float resources = 50;
     public void AddResources(float res) { resources += res; }
     public void SubtractResources(float res) { resources -= res; }
 
@@ -76,6 +118,43 @@ public class AIController : MonoBehaviour
     public void RemoveMilitaryUnit(UnitController unit) { militaryUnits.Remove(unit); }
     public void AddProductionStructureUnit(UnitController unit) { productionStructureUnits.Add(unit); }
     public void RemoveProductionStructureUnit(UnitController unit) { productionStructureUnits.Remove(unit); }
+
+
+    private void Start()
+    {
+        if (GameManager.instance.showMeTheMoney)
+            resources = 10000;
+
+        requestList.Add(new AITrainUnitAmountRequest(UnitID.FactionAWorker, 8));
+        requestList.Add(new AIConstructUnitAmountRequest(UnitID.FactionADepot));
+        requestList.Add(new AIConstructUnitAmountRequest(UnitID.FactionAFort));
+        requestList.Add(new AITrainUnitAmountRequest(UnitID.FactionAFighter, 2));
+        requestList.Add(new AITrainUnitAmountRequest(UnitID.FactionAWorker, 2));
+
+        // Send workers to mine
+
+        // Send military units to defend
+
+        // Send military units to scout
+
+        // Send military units to attack
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (requestList.Count > 0)
+        {
+            if (!requestList[0].completed)
+            {
+                Debug.Log(requestList[0]);
+                requestList[0].completed = requestList[0].complete(this);
+            } else
+            {
+                requestList.RemoveAt(0);
+            }
+        }
+    }
 
     // Dependency checks
     public bool UnitDependenciesSatisfied(UnitID unitID)
@@ -110,6 +189,16 @@ public class AIController : MonoBehaviour
         return null;
     }
 
+    public UnitController FindUnitThatProducesUnit(UnitID unitID)
+    {
+        foreach (UnitController unit in units)
+        {
+            if (unit.type.trainableUnits.Contains(unitID))
+                return unit;
+        }
+        return null;
+    }
+
     public int UnitCount(UnitID unitID)
     {
         return UnitCount(unitID, false);
@@ -132,27 +221,11 @@ public class AIController : MonoBehaviour
         return count;
     }
 
-    private void Start()
-    {
-        requestList.Add(new AITrainUnitAmountRequest(UnitID.FactionAWorker, 8));
-        requestList.Add(new AITrainUnitAmountRequest(UnitID.FactionAFighter, 1));
-        requestList.Add(new AITrainUnitAmountRequest(UnitID.FactionAWorker, 10));
-        requestList.Add(new AITrainUnitAmountRequest(UnitID.FactionAFighter, 3));
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        foreach(AIRequest request in requestList)
-        {
-            if (!request.completed) request.completed = request.complete(this);
-        }
-    }
 
     // TODO Extend and optimize for queue time and distance to location
     public bool TrainUnit(UnitID unitID)
     {
-        UnitController unitProducer = FindUnit(UnitID.FactionATownHall);
+        UnitController unitProducer = FindUnitThatProducesUnit(unitID);
         if (!unitProducer) return false;
         return unitProducer.TrainUnit(UnitType.Get(unitID));
     }
@@ -161,5 +234,15 @@ public class AIController : MonoBehaviour
     {
         if (unit.isHarvester) unit.HarvestNearbyResources();
         if (unit.isMilitary) unit.PatrolNearbyArea();
+    }
+
+    public bool CanPlaceStructure(UnitID unitID, Vector3 point)
+    {
+        PlacementGhostController placementGhost = Instantiate(Resources.Load<GameObject>("Prefabs/PlacementGhost"), point, Quaternion.identity).GetComponent<PlacementGhostController>();
+        placementGhost.SetUnitType(UnitType.Get(unitID));
+        placementGhost.UpdatePlacement();
+        bool isPlacementvalid = placementGhost.isPlacementValid;
+        placementGhost.Destroy();
+        return isPlacementvalid;
     }
 }
