@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class PlayerManager : MonoBehaviour
 {
@@ -12,6 +13,7 @@ public class PlayerManager : MonoBehaviour
     public float playerResources;
     private ParticleSystem targetEmitter;
     public Material[] playerMaterials = new Material[9];
+    public LineRenderer lineRenderer;
 
     private PlacementGhostController placementGhost;
     private bool isPlacingUnit { get { return placementGhost != null; } }
@@ -25,6 +27,7 @@ public class PlayerManager : MonoBehaviour
 
     private void Start()
     {
+        lineRenderer = GetComponent<LineRenderer>();
         targetEmitter = transform.Find("TargetEmitter").GetComponent<ParticleSystem>();
         playerResources = 10000;
     }
@@ -60,20 +63,19 @@ public class PlayerManager : MonoBehaviour
         const float sectionHeight = 180;
 
         GUI.BeginGroup(new Rect(inset, Screen.height - sectionHeight, Screen.width - inset * 2, sectionHeight - inset));
-        GUI.Box(new Rect(0, 0, Screen.width - inset * 2, sectionHeight - inset), "");
+        //GUI.Box(new Rect(0, 0, Screen.width - inset * 2, sectionHeight - inset), "");
         if (selectedUnits.Count > 0)
         {
             UnitController firstSelectedUnit = selectedUnits[0];
 
             // Path
-            if (firstSelectedUnit.navAgent)
+            if (firstSelectedUnit.navAgent && firstSelectedUnit.navAgent.destination != Vector3.zero)
             {
-                for (int i = 0; i < firstSelectedUnit.navAgent.path.corners.Length - 1; i++)
-                {
-                    Debug.DrawLine(firstSelectedUnit.navAgent.path.corners[i], firstSelectedUnit.navAgent.path.corners[i + 1], Color.red);
-                }
+                NavMeshPath path = new NavMeshPath();
+                firstSelectedUnit.navAgent.CalculatePath(firstSelectedUnit.navAgent.destination, path); //Saves the path in the path variable.
+                Vector3[] corners = path.corners;
+                lineRenderer.SetPositions(corners);
             }
-
 
             // Unit info
             var unitInfoData = new Dictionary<object, object>();

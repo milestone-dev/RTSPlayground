@@ -24,6 +24,11 @@ public class AITrainUnitAmountRequest : AIRequest
         amount = amt;
     }
 
+    public override string ToString()
+    {
+        return $"AITrainUnitAmountRequest unitID {unitID} amount {amount}";
+    }
+
     public override bool complete(AIController ai)
     {
         if (ai.UnitCount(unitID, true) >= amount)
@@ -47,6 +52,11 @@ public class AIConstructUnitAmountRequest : AIRequest
         unitID = ui;
     }
 
+    public override string ToString()
+    {
+        return $"AIConstructUnitAmountRequest unitID {unitID} with constructor {constructorUnit}";
+    }
+
     public override bool complete(AIController ai)
     {
         if (!constructorUnit)
@@ -56,28 +66,40 @@ public class AIConstructUnitAmountRequest : AIRequest
         {
             if (ai.UnitDependenciesSatisfied(unitID) && ai.CanAffordUnit(unitID))
             {
+                const float placementRange = 20f;
                 UnitController townHall = ai.FindUnit(UnitID.FactionATownHall);
                 Vector3 originPosition = townHall.transform.position;
-                Vector3 placementPosition = originPosition  + new Vector3(Random.Range(-30, 30), 0, Random.Range(-30, 30));
+                Vector3 placementPosition = originPosition  + new Vector3(Random.Range(-placementRange, placementRange), 0, Random.Range(-placementRange, placementRange));
                 if (constructorUnit.CanMoveToPoint(placementPosition))
                 { 
                     if (ai.CanPlaceStructure(unitID, placementPosition))
                     {
                         constructorUnit.constructionUnitType = UnitType.Get(unitID);
-                        constructorUnit.SetTargetPosition(townHall.transform.position + new Vector3(Random.Range(-30, 30), 0, Random.Range(-30, 30)), Order.Construct);
+                        constructorUnit.SetTargetPosition(townHall.transform.position + new Vector3(Random.Range(-placementRange, placementRange), 0, Random.Range(-placementRange, placementRange)), Order.Construct);
+                    } else
+                    {
+                        Debug.Log($"{this} Cannot place structure {unitID} at {placementPosition}");
                     }
+                } else
+                {
+                    Debug.Log($"{this} Cannot move to point {placementPosition}");
                 }
+            } else
+            {
+                Debug.Log($"{this} Dependencies not satisfied for {unitID}");
             }
         }
 
         if  (constructorUnit && constructorUnit.aiDataLastConstructedUnit && constructorUnit.aiDataLastConstructedUnit.type.id == unitID)
         {
+            constructorUnit.aiDataLastConstructedUnit = null;
             constructorUnit.SetTargetUnit(ai.FindUnit(UnitID.FactionATownHall), Order.ReturnResources);
             return true;
         }
 
         return false;
     }
+
 }
 
 public class AIController : MonoBehaviour
@@ -122,14 +144,19 @@ public class AIController : MonoBehaviour
 
     private void Start()
     {
-        if (GameManager.instance.showMeTheMoney)
-            resources = 10000;
-
         requestList.Add(new AITrainUnitAmountRequest(UnitID.FactionAWorker, 8));
         requestList.Add(new AIConstructUnitAmountRequest(UnitID.FactionADepot));
         requestList.Add(new AIConstructUnitAmountRequest(UnitID.FactionAFort));
         requestList.Add(new AITrainUnitAmountRequest(UnitID.FactionAFighter, 2));
-        requestList.Add(new AITrainUnitAmountRequest(UnitID.FactionAWorker, 2));
+        requestList.Add(new AIConstructUnitAmountRequest(UnitID.FactionAFort));
+        requestList.Add(new AITrainUnitAmountRequest(UnitID.FactionAFighter, 10));
+        requestList.Add(new AIConstructUnitAmountRequest(UnitID.FactionADepot));
+        requestList.Add(new AIConstructUnitAmountRequest(UnitID.FactionADepot));
+        requestList.Add(new AIConstructUnitAmountRequest(UnitID.FactionAFort));
+        requestList.Add(new AIConstructUnitAmountRequest(UnitID.FactionADepot));
+        requestList.Add(new AIConstructUnitAmountRequest(UnitID.FactionADepot));
+        requestList.Add(new AITrainUnitAmountRequest(UnitID.FactionAWorker, 1));
+        requestList.Add(new AITrainUnitAmountRequest(UnitID.FactionAFighter, 2));
 
         // Send workers to mine
 
@@ -143,17 +170,30 @@ public class AIController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (GameManager.instance.showMeTheMoney && resources < 10000)
+            resources = 10000;
+
         if (requestList.Count > 0)
         {
-            if (!requestList[0].completed)
+            //Debug.Log($"Processing queue with count {requestList.Count}");
+            requestList[0].completed = requestList[0].complete(this);
+            if (requestList[0].completed)
             {
-                Debug.Log(requestList[0]);
-                requestList[0].completed = requestList[0].complete(this);
-            } else
-            {
+                Debug.Log($"Processed {requestList[0]}");
                 requestList.RemoveAt(0);
+                Debug.Log($"{requestList.Count} requests left");
+                if(requestList.Count > 0) Debug.Log($"Processing {requestList[0]}...");
             }
         }
+        //for (var i = 0; i < requestList.Count; i++)
+        //{
+        //    if (!requestList[i].completed)
+        //    {
+        //        Debug.Log($"Request {i  }: {requestList[i]}...");
+        //        requestList[i].completed = requestList[i].complete(this);
+        //        break;
+        //    }
+        //}
     }
 
     // Dependency checks
@@ -238,11 +278,52 @@ public class AIController : MonoBehaviour
 
     public bool CanPlaceStructure(UnitID unitID, Vector3 point)
     {
-        PlacementGhostController placementGhost = Instantiate(Resources.Load<GameObject>("Prefabs/PlacementGhost"), point, Quaternion.identity).GetComponent<PlacementGhostController>();
-        placementGhost.SetUnitType(UnitType.Get(unitID));
-        placementGhost.UpdatePlacement();
-        bool isPlacementvalid = placementGhost.isPlacementValid;
-        placementGhost.Destroy();
-        return isPlacementvalid;
+        Vector3 size = UnitType.Get(unitID).GetBounds().size;
+        size = new Vector3(4, 0, 4);
+
+        const float maxDistance = 1;
+
+        bool canPlace = true;
+
+        Vector3[] points = new[]
+        {
+            point,
+            point + new Vector3(-size.x, 0, -size.z),
+            point + new Vector3(-size.x, 0, size.z),
+            point + new Vector3(size.x, 0, -size.z),
+            point + new Vector3(size.x, 0, size.z),
+        };
+
+        NavMeshHit hit;
+        for (var i = 0; i < points.Length; i++)
+        {
+            if (!NavMesh.SamplePosition(points[i], out hit, maxDistance, NavMesh.AllAreas))
+                canPlace = false;
+        }
+
+        if (canPlace)
+        {
+            Collider[] hitColliders = Physics.OverlapBox(point, size / 2, Quaternion.identity);
+            for (var i = 0; i < hitColliders.Length; i++)
+            {
+                if (hitColliders[i].CompareTag("Unit"))
+                {
+                    canPlace = false;
+                    break;
+                }
+            }
+
+        }
+
+        Debug.Log($"CanPlaceStructure {point}, {canPlace}");
+
+        return canPlace;
+
+        //PlacementGhostController placementGhost = Instantiate(Resources.Load<GameObject>("Prefabs/PlacementGhost"), point, Quaternion.identity).GetComponent<PlacementGhostController>();
+        //placementGhost.SetUnitType(UnitType.Get(unitID));
+        //placementGhost.UpdatePlacement();
+        //bool isPlacementvalid = placementGhost.isPlacementValid;
+        //placementGhost.Destroy();
+        //return isPlacementvalid;
     }
 }

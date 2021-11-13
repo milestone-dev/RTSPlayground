@@ -101,6 +101,8 @@ public class UnitController : MonoBehaviour
         else if (isBuilding)
         {
             navObstacle = gameObject.AddComponent<NavMeshObstacle>();
+            navObstacle.carving = true;
+            navObstacle.carveOnlyStationary = true;
         }
 
         if (type.prefabModel)
@@ -250,10 +252,10 @@ public class UnitController : MonoBehaviour
 
         if (type.canHarvest)
         {
-            if ((currentOrder == Order.Harvest || currentOrder == Order.ReturnResources) && navAgent.radius != 0.1f)
-                navAgent.radius = 0.1f;
-            else if ((currentOrder != Order.Harvest && currentOrder != Order.ReturnResources) && navAgent.radius != 0.5f)
-                navAgent.radius = 0.5f;
+            if ((currentOrder == Order.Harvest || currentOrder == Order.ReturnResources) && navAgent.obstacleAvoidanceType != ObstacleAvoidanceType.NoObstacleAvoidance)
+                navAgent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
+            else if ((currentOrder != Order.Harvest && currentOrder != Order.ReturnResources) && navAgent.obstacleAvoidanceType != ObstacleAvoidanceType.HighQualityObstacleAvoidance)
+                navAgent.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
         }
     }
 

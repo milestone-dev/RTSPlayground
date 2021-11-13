@@ -80,6 +80,12 @@ public class UnitType : ScriptableObject
     [Header("Construction")]
     public List<UnitID> constructableUnits;
 
+    public Bounds GetBounds()
+    {
+        if (prefabModel) return new Bounds();
+        return prefabModel.GetComponent<Renderer>().bounds;
+    }
+
     public string GetTooltipText()
     {
         return $"{unitDescription}\n\n{productionCost} resources";

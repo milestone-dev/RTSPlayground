@@ -9671,7 +9671,10 @@ MonoBehaviour:
   currentTargetPosition: {x: 0, y: 0, z: 0}
   currentTargetUnit: {fileID: 0}
   lastTargetResourceUnit: {fileID: 0}
+  aiDataLastConstructedUnit: {fileID: 0}
   resourcesLeft: 0
+  ai: {fileID: 0}
+  constructionUnitType: {fileID: 0}
   productionQueue: []
   remainingProductionTime: 0
 --- !u!65 &133377048400298693
